@@ -1,5 +1,6 @@
 var NODE_NORMAL_SIZE = 40;
 var NODE_EXPANDED_SIZE = 60;
+var DEBUG = false;
 
 $(document).ready(function() {
 
@@ -38,7 +39,6 @@ $(document).ready(function() {
     });
 
     $("#linkBtn").click(function () {
-
         if (currentMindmap.selected) {
             currentMindmap.linking = true;
         }
@@ -120,9 +120,11 @@ $(document).ready(function() {
     };
     Mindmap.prototype.add = function(node) {
         this.nodes.push(node);
+        node.parentMindmap = this;
     };
     Mindmap.prototype.remove = function(node) {
         this.nodes.splice(this.nodes.indexOf(node), 1);
+        node.parentMindmap = null;
     };
     Mindmap.prototype.deselect = function() {
         // change back to default colour
@@ -155,8 +157,8 @@ $(document).ready(function() {
         this.circle.Node = this; // reference to wrapper object
         this.beingDragged = false;
         this.draggedOver = null;
-        this.index = Node.index++;
-        this.title = "";
+        this.index = Node.index++; // not really needed, can use this.circle.id
+        this.title = DEBUG ? this.index.toString() : "";
         this.parentMindmap = currentMindmap;
         this.childMindmap = null;
 
@@ -257,6 +259,9 @@ $(document).ready(function() {
                     if (!draggedOver.childMindmap) {
                         draggedOver.childMindmap = new Mindmap(currentMindmap);
                     }
+                    else {
+                        draggedOver.childMindmap.parent = currentMindmap;
+                    }
 
                     currentMindmap.remove(this.Node);
                     this.Node.hide();
@@ -275,7 +280,6 @@ $(document).ready(function() {
             //     alert('ctrl key pressed');
             // }
             // alert('click handler');
-
 
             if (currentMindmap.linking) {
                 // link
@@ -297,6 +301,9 @@ $(document).ready(function() {
             // going into the double-clicked node
             if (!this.Node.childMindmap) {
                 this.Node.childMindmap = new Mindmap(currentMindmap);
+            }
+            else {
+                this.Node.childMindmap.parent = currentMindmap;
             }
             currentMindmap.clear();
             currentMindmap = this.Node.childMindmap;
