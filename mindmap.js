@@ -204,11 +204,10 @@ $(document).ready(function() {
                 if (collision(draggedOver.circle, that.circle)) {
                     // no change to draggedOver
                 } else {
-                    // restore original colour
-                    draggedOver.circle.attr({fill: "#0000FF"});
                     // use fixed sizes intead of relative
                     // draggedOver.circle.animate({r: originalRadius}, 50, ">");
                     originalRadius = 0;
+                    draggedOver.circle.attr({fill: "#0000FF"});
                     draggedOver = null;
                 }
             }
@@ -254,7 +253,8 @@ $(document).ready(function() {
                     draggedOver.childMindmap.add(this.Node);
                 }
 
-                currentMindmap.deselect();
+                draggedOver.circle.attr({fill: "#0000FF"});
+                draggedOver = null;
             }
         }
 
