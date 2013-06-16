@@ -1,0 +1,40 @@
+/*.node {
+    height: 40px;
+    width: 40px;
+    position: absolute;
+    border: 1px solid #1240AB;
+    background: #8F9BF6;
+    cursor: default;
+    top: 120px;
+    text-align: center;
+    line-height: 40px;
+    font-family: Consolas;
+}*/
+
+.selected {
+    border: 1px solid #FF8900;
+    background: #FF971F;
+    cursor: move;
+}
+
+/*#one {
+    left: 100px;
+}
+
+#two {
+    left: 150px;
+}
+
+#three {
+    left: 200px;
+}*/
+
+#canvas {
+    border: solid black 1px;
+    width: 800px;
+    height: 600px;
+}
+
+.columns {
+    float: left;
+}

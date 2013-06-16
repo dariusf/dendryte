@@ -1,0 +1,26 @@
+<html>
+    <head>
+        <title>Mindmap demo</title>
+        <script type="text/javascript" src="lib/jquery-2.0.0.min.js"></script>
+        <script type="text/javascript" src="lib/raphael.js"></script>
+        <script type="text/javascript" src="mindmap.js"></script>
+        <link rel="stylesheet" type="text/css" href="styles.css">
+    </head>
+
+    <body>
+        <button id="linkBtn">link</button>
+        <button id="delBtn">delete</button>
+        <button id="upBtn">up</button>
+        <p>Double-click on the canvas to create a node. Drag and drop nodes into each other to create a hierarchy!</p>
+        <div id="breadcrumb"></div>
+        <div class="columns" id="canvas">
+            <!--
+            <div id="one" class="node">1</div>
+            <div id="two" class="node">2</div>
+            <div id="three" class="node">3</div>
+            -->
+        </div>
+        <textarea id="titlefield" class="columns" rows="1" cols="60"></textarea> <br />
+        <textarea id="infopanel" class="columns" rows="35" cols="60"></textarea>
+    </body>
+</html>
