@@ -113,13 +113,15 @@ $(document).ready(function() {
     Mindmap.prototype.deselect = function() {
         // change back to default colour
         if (this.selected) {
-            this.selected.circle.attr({fill: "#0000FF"});
+            // this.selected.circle.attr({fill: "#0000FF"});
+            this.selected.circle.attr({"stroke-width": 0});
             this.selected = null;
         }
     };
     Mindmap.prototype.select = function(node) {
         this.selected = node;
-        node.circle.attr({fill: "#FF0000"});
+        this.selected.circle.attr({"stroke-width": 5});
+        // node.circle.attr({fill: "#FF0000"});
     };
 
     Node.index = 0;
@@ -127,7 +129,8 @@ $(document).ready(function() {
         options = options || {};
         this.circle = R.circle(x, y, radius).attr({
             fill: options.fill || "#0000FF",
-            stroke: "none",
+            stroke: "#000000",
+            "stroke-width": options["stroke-width"] || 0,
             opacity: options.opacity || 1, // was .5
             cursor: options.cursor || "default"
         });
@@ -147,7 +150,7 @@ $(document).ready(function() {
         this.circle.attr({title: title});
         this.label = R.text(x, y - this.circle.attr("r") - 15, title);
 
-        var lexicalRef = this.circle;
+        var that = this;
         var draggedOver = null;
         var originalRadius = 0;
 
@@ -198,7 +201,7 @@ $(document).ready(function() {
 
             if (draggedOver !== null) {
                 // there is already a drop candidate
-                if (collision(draggedOver.circle, lexicalRef)) {
+                if (collision(draggedOver.circle, that.circle)) {
                     // no change to draggedOver
                 } else {
                     // restore original colour
@@ -212,8 +215,8 @@ $(document).ready(function() {
             else {
                 // check if any other nodes are new candidates for a drop
                 for (var i=0; i<currentMindmap.nodes.length; i++) {
-                    if (currentMindmap.nodes[i] !== lexicalRef.Node) {
-                        if (collision(lexicalRef, currentMindmap.nodes[i].circle)) {
+                    if (currentMindmap.nodes[i] !== that.circle.Node) {
+                        if (collision(that.circle, currentMindmap.nodes[i].circle)) {
                             // if so, highlight and drop all other candidates
                             currentMindmap.nodes[i].circle.attr({fill: "#FFFF00"});
                             originalRadius = currentMindmap.nodes[i].circle.attr("r");
@@ -232,11 +235,13 @@ $(document).ready(function() {
             if (draggedOver !== null) {
                 // parent the current node to the node that was dragged over
 
-                // need an additional case for if the node is linked ot others;
-                // drag all the linked ones in too?
                 if (this.Node.isLinkedTo(draggedOver)) {
-                    alert("cannot parent linked nodes");
-                } else {
+                    alert("these two nodes are linked; one can't be made a parent of the other unless the link is removed");
+                }
+                else if (this.Node.linked.length > 0) {
+                    alert("this node is linked to another node; it can't be dragged into another node (for now)");
+                }
+                else {
                     draggedOver.children.push(this.Node);
                     this.Node.parent = draggedOver;
 
@@ -249,8 +254,7 @@ $(document).ready(function() {
                     draggedOver.childMindmap.add(this.Node);
                 }
 
-                draggedOver.circle.attr({fill: "#0000FF"}); // default colour
-                draggedOver = null;
+                currentMindmap.deselect();
             }
         }
 
@@ -264,17 +268,18 @@ $(document).ready(function() {
 
             if (currentMindmap.linking) {
                 // link
-                currentMindmap.selected.linkTo(lexicalRef.Node);
+                currentMindmap.selected.linkTo(that.circle.Node);
                 currentMindmap.linking = false;
             }
 
             // manage selections
             currentMindmap.deselect();
-            currentMindmap.select(lexicalRef.Node);
+            currentMindmap.select(that.circle.Node);
+            that.circle.toFront();
 
             // update fields
-            $("#infopanel").val(lexicalRef.Node.text);
-            $("#titlefield").val(lexicalRef.Node.title);
+            $("#infopanel").val(that.circle.Node.text);
+            $("#titlefield").val(that.circle.Node.title);
         });
 
         this.circle.dblclick(function (e) {
@@ -313,10 +318,16 @@ $(document).ready(function() {
     Node.prototype.hide = function() {
         this.circle.hide();
         this.label.hide();
+        this.links.forEach(function (link) {
+            link.hide();
+        });
     };
     Node.prototype.show = function() {
         this.circle.show();
         this.label.show();
+        this.links.forEach(function (link) {
+            link.show();
+        });
     };
     Node.prototype.remove = function() {
         this.circle.remove();
