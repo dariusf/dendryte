@@ -1,6 +1,10 @@
+var NODE_NORMAL_SIZE = 40;
+var NODE_EXPANDED_SIZE = 60;
+
 $(document).ready(function() {
 
     var R = Raphael("canvas", 800, 600);
+    var app = {};
     var currentMindmap = new Mindmap();
     var currentLevel = 0;
 
@@ -8,6 +12,7 @@ $(document).ready(function() {
     button.get(0).level = currentLevel++;
     button.click(breadcrumbHandler);
     $("#breadcrumb").append(button);
+
     function breadcrumbHandler () {
         var depth = currentLevel - this.level - 1;
         for (var i=0; i<depth; i++) {
@@ -87,10 +92,19 @@ $(document).ready(function() {
         this.linking = false;
     }
     Mindmap.prototype.newNode = function(x, y) {
-        var colours = ["#0000FF"],//, "#00FF00", "#FF0000"],
-            index = 0;
+        var nodeColours = ["#0000FF", "#00FF00", "#FF0000"],
+            outlineColours = ["#000080", "#008000", "#800000"];
 
-        var n = new Node(x, y, /*random(20, 40)*/40, {fill: colours[index++ % 3], cursor: "move"});
+        if (!Mindmap.prototype.newNode.index) {
+            Mindmap.prototype.newNode.index = 0;
+        }
+        Mindmap.prototype.newNode.index++;
+
+        var n = new Node(x, y, NODE_NORMAL_SIZE, {
+            fill: nodeColours[Mindmap.prototype.newNode.index % 3],
+            cursor: "move",
+            stroke: outlineColours[Mindmap.prototype.newNode.index % 3]
+        });
         this.nodes.push(n);
         n.parentMindmap = this;
     };
@@ -129,9 +143,9 @@ $(document).ready(function() {
         options = options || {};
         this.circle = R.circle(x, y, radius).attr({
             fill: options.fill || "#0000FF",
-            stroke: "#000000",
+            stroke: options.stroke || "#000000",
             "stroke-width": options["stroke-width"] || 0,
-            opacity: options.opacity || 1, // was .5
+            opacity: 1,
             cursor: options.cursor || "default"
         });
         this.linked = [];
@@ -152,7 +166,6 @@ $(document).ready(function() {
 
         var that = this;
         var draggedOver = null;
-        var originalRadius = 0;
 
         // draw a line between this node and all linked nodes
 
@@ -160,7 +173,6 @@ $(document).ready(function() {
             // store original coordinates
             this.ox = this.attr("cx");
             this.oy = this.attr("cy");
-            this.attr({opacity: 1});
             this.Node.beingDragged = true;
         }
 
@@ -171,6 +183,7 @@ $(document).ready(function() {
             this.attr({cx: newx, cy: newy});
 
             var radius = this.attr("r");
+            
             // update text position
             this.Node.label.attr({
                 x: newx,
@@ -205,9 +218,8 @@ $(document).ready(function() {
                     // no change to draggedOver
                 } else {
                     // use fixed sizes intead of relative
-                    // draggedOver.circle.animate({r: originalRadius}, 50, ">");
-                    originalRadius = 0;
-                    draggedOver.circle.attr({fill: "#0000FF"});
+                    draggedOver.circle.animate({r: NODE_NORMAL_SIZE}, 300, ">");
+                    // draggedOver.circle.attr({fill: "#0000FF"});
                     draggedOver = null;
                 }
             }
@@ -217,9 +229,8 @@ $(document).ready(function() {
                     if (currentMindmap.nodes[i] !== that.circle.Node) {
                         if (collision(that.circle, currentMindmap.nodes[i].circle)) {
                             // if so, highlight and drop all other candidates
-                            currentMindmap.nodes[i].circle.attr({fill: "#FFFF00"});
-                            originalRadius = currentMindmap.nodes[i].circle.attr("r");
-                            // nodes[i].circle.animate({r: originalRadius*2}, 50, ">");
+                            // currentMindmap.nodes[i].circle.attr({fill: "#FFFF00"});
+                            currentMindmap.nodes[i].circle.animate({r: NODE_EXPANDED_SIZE}, 300, ">");
                             draggedOver = currentMindmap.nodes[i];
                             break;
                         }
@@ -228,7 +239,6 @@ $(document).ready(function() {
             }
         }
         function dragEnd() {
-            this.attr({opacity: 1}); //.5
             this.Node.beingDragged = false;
 
             if (draggedOver !== null) {
@@ -253,7 +263,8 @@ $(document).ready(function() {
                     draggedOver.childMindmap.add(this.Node);
                 }
 
-                draggedOver.circle.attr({fill: "#0000FF"});
+                // draggedOver.circle.attr({fill: "#0000FF"});
+                draggedOver.circle.animate({r: NODE_NORMAL_SIZE}, 300, ">");
                 draggedOver = null;
             }
         }
