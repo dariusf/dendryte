@@ -1,10 +1,12 @@
 var NODE_NORMAL_SIZE = 40;
 var NODE_EXPANDED_SIZE = 60;
+var CANVAS_WIDTH = 800;
+var CANVAS_HEIGHT = 600;
 var DEBUG = false;
 
 $(document).ready(function() {
 
-    var R = Raphael("canvas", 800, 600);
+    var R = Raphael("canvas", CANVAS_WIDTH, CANVAS_HEIGHT);
     var app = {};
     var currentMindmap = new Mindmap();
     var currentLevel = 0;
@@ -133,6 +135,8 @@ $(document).ready(function() {
             this.selected.circle.attr({"stroke-width": 0});
             this.selected = null;
         }
+        this.linking = false;
+        // update the interface too once more abstractions are in place
     };
     Mindmap.prototype.select = function(node) {
         this.selected = node;
@@ -152,6 +156,7 @@ $(document).ready(function() {
         });
         this.linked = [];
         this.links = [];
+        this.linkMap = {};
         this.children = [];
         this.parent = null;
         this.circle.Node = this; // reference to wrapper object
@@ -179,8 +184,8 @@ $(document).ready(function() {
         }
 
         function dragMove(dx, dy) {
-            var newx = this.ox + dx,
-                newy = this.oy + dy;
+            var newx = clamp(this.ox + dx, 0, CANVAS_WIDTH),
+                newy = clamp(this.oy + dy, 0, CANVAS_HEIGHT);
 
             this.attr({cx: newx, cy: newy});
 
@@ -283,7 +288,14 @@ $(document).ready(function() {
 
             if (currentMindmap.linking) {
                 // link
-                currentMindmap.selected.linkTo(that.circle.Node);
+                if (currentMindmap.selected.isLinkedTo(that.circle.Node)) {
+                    alert("those 2 nodes are already linked");
+                    // should just have silent failure since alert messes with mousedown
+                } else if (currentMindmap.selected === that.circle.Node) {
+                    alert("you can't link a node to itself");
+                } else {
+                    currentMindmap.selected.linkTo(that.circle.Node);
+                }
                 currentMindmap.linking = false;
             }
 
@@ -327,6 +339,9 @@ $(document).ready(function() {
 
         this.links.push(path);
         otherNode.links.push(path);
+
+        this.linkMap[path.id] = otherNode;
+        otherNode.linkMap[path.id] = this;
     };
 
     Node.prototype.isLinkedTo = function(otherNode) {
@@ -350,6 +365,18 @@ $(document).ready(function() {
     Node.prototype.remove = function() {
         this.circle.remove();
         this.label.remove();
+        var that = this;
+        this.links.forEach(function (link) {
+            // remove link from other node's list of links
+            var otherNode = that.linkMap[link.id];
+            otherNode.links.splice(otherNode.links.indexOf(link), 1);
+
+            // remove link from linked too
+            otherNode.linked.splice(otherNode.linked.indexOf(that), 1);
+            that.linkMap[link.id] = null; // null instead of undefiend to show that it was deleted
+
+            link.remove();
+        });
         this.children.forEach(function (child) {
             child.remove();
         });
@@ -362,6 +389,10 @@ function distance (x1, y1, x2, y2) {
 
 function random (lower, upper) {
     return Math.floor(Math.random() * (upper-lower) + lower);
+}
+
+function clamp (n, min, max) {
+    return Math.max(Math.min(n, max), min);
 }
 
 // Debug
