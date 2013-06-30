@@ -1,0 +1,19 @@
+application: dendrytetest
+version: 1
+runtime: python27
+api_version: 1
+threadsafe: true
+
+handlers:
+
+# Twitter Bootstrap
+- url: /bootstrap
+  static_dir: bootstrap
+
+# Handler for front page
+- url: /.*
+  script: front.app
+
+libraries:
+- name: jinja2
+  version: latest
