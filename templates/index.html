@@ -1,0 +1,58 @@
+<html>
+    <head>
+        <title>Dendryte</title>
+        <script type="text/javascript" src="../scripts/jquery-2.0.0.min.js"></script>
+        <script type="text/javascript" src="../scripts/raphael.js"></script>
+        <script type="text/javascript" src="../scripts/mindmap.js"></script>
+        <link rel="stylesheet" type="text/css" href="../stylesheets/styles.css">
+		<link href="../bootstrap/css/bootstrap.css" rel="stylesheet">
+		<link href="../bootstrap/css/bootstrap-responsive.css" rel="stylesheet">
+    </head>
+
+    <body>
+		<div class="container-fluid"> 
+
+      <!-- Top bar --> 
+      <div class="row-fluid top-container">  
+		<h1>Dendryte</h1>
+      </div>
+      <!-- End of top bar -->
+
+      <!-- Main navigation -->
+      <div class = "navbar navbar-inverse">
+		<div class = "navbar-inner">
+			<!--<div class = "container-fluid">
+				<button type="button" class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+				</button>-->
+			<div class = "nav-collapse collapse">
+				<p class="navbar-text pull-right">
+					Welcome, {{ username }}. <a href = "{{ logout }}" class = "navbar-link">Log out</a>
+				</p>
+				<ul class = "nav">
+					<li> <a href="/">Home</a> </li>
+				</ul>
+			<!--</div>-->
+			</div>
+		</div> 
+      </div>
+	  
+        <button id="linkBtn">link</button>
+        <button id="delBtn">delete</button>
+        <button id="upBtn">up</button>
+        <p>Double-click on the canvas to create a node. Drag and drop nodes into each other to create a hierarchy!</p>
+        <!--<div id="breadcrumb"></div>-->
+		<a href="/main">My Projects </a> >> My First Project <br/><br/>
+        <div class="columns" id="canvas">
+            <!--
+            <div id="one" class="node">1</div>
+            <div id="two" class="node">2</div>
+            <div id="three" class="node">3</div>
+            -->
+        </div>
+        <textarea id="titlefield" class="columns" rows="1" cols="60"></textarea> <br /><br/>
+        <textarea id="infopanel" class="columns" rows="28" cols="60"></textarea>
+    </body>
+</html>
