@@ -25,6 +25,21 @@ class MainPage(webapp2.RequestHandler):
 			self.response.out.write(template.render(template_values))
 		else:
 			self.redirect(self.request.host_url)
-
-app = webapp2.WSGIApplication([('/dendryte', MainPage)],
+			
+class Index(webapp2.RequestHandler):
+	""" Displays the canvas """
+	def get(self):
+		user = users.get_current_user()
+		if user:  # signed in already
+			template_values = {
+				'username': users.get_current_user().nickname(),
+				'logout': users.create_logout_url(self.request.host_url),
+			} 
+			template = jinja_environment.get_template('index.html')
+			self.response.out.write(template.render(template_values))
+		else:
+			self.redirect(self.request.host_url)
+			
+app = webapp2.WSGIApplication([('/dendryte', MainPage),
+                               ('/index', Index)],
                               debug=True)
