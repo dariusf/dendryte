@@ -142,13 +142,20 @@ $(document).ready(function() {
 
         var canvas = $("#canvas"); // a div
         canvas.mousedown(function (e) {
+
+            if (pathObject) {
+                // deal with leftover artifacts in chrome
+                // (chrome has this annoying quirk with selections
+                // which can only be avoided by clicking the canvas
+                // at least once)
+                pathObject.remove();
+            }
+
             if (!cut) return;
 
             // only triggers on canvas, not on nodes
             if (e.target.nodeName === "svg") {
                 dragging = true;
-
-                // console.log("down")
 
                 var clientXRel = e.pageX- $(this).offset().left;
                 var clientYRel = e.pageY - $(this).offset().top;
@@ -182,10 +189,10 @@ $(document).ready(function() {
             if (!cut) return;
 
             if (dragging) {
-            dragging = false;
-            // console.log("up")
+                dragging = false;
+                // console.log("up")
 
-            var done = false;
+                var done = false;
 
                 for (var i=0; i<currentMindmap.nodes.length; i++) {
                     // console.log("inside node " + i);
@@ -224,8 +231,10 @@ $(document).ready(function() {
                 }
             }
 
-            pathObject.remove();
-            pathObject = null;
+            if (pathObject) {
+                pathObject.remove();
+                pathObject = null;
+            }
         });
     })();
 
