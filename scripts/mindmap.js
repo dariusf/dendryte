@@ -11,6 +11,9 @@ $(document).ready(function() {
     var currentMindmap = new Mindmap();
     var currentLevel = 0;
 
+    var linkActivated = false;
+
+    // root button
     var button = $("<button>root</button>");
     button.get(0).level = currentLevel++;
     button.click(breadcrumbHandler);
@@ -41,6 +44,117 @@ $(document).ready(function() {
     });
 
     $("#linkBtn").click(function () {
+        linkActivated = !linkActivated;
+        $("#linkBtn").html(linkActivated ? "stop linking" : "link");
+        console.log('link button');
+    });
+    function linkDragStart () {
+        console.log("start");
+    }
+    function linkDragMove (dx, dy) {
+        console.log("move");
+    }
+    function linkDragEnd () {
+        console.log("end");
+    }
+
+    // define handlers for cut button
+    (function () {
+        var dragging = false;
+        var pathObject = null;
+        var cut = false;
+
+        $("#cutBtn").click(function () {
+            cut = !cut;
+            $("#cutBtn").html(cut ? "stop cutting" : "cut");
+            // alert('cut button');
+        });
+
+        var canvas = $("#canvas"); // a div
+        canvas.mousedown(function (e) {
+            if (!cut) return;
+
+            dragging = true;
+
+            // console.log("down")
+
+            var clientXRel = e.pageX- $(this).offset().left;
+            var clientYRel = e.pageY - $(this).offset().top;
+            // console.log(clientXRel + ", " + clientYRel);
+
+            pathObject = R.path("M " + clientXRel + "," + clientYRel + " L " + (clientXRel) + "," + (clientYRel) + " Z");
+        });
+        canvas.mousemove(function (e) {
+            if (!cut) return;
+
+            if (dragging) {
+            // console.log("moving")
+
+                var clientXRel = e.pageX- $(this).offset().left;
+                var clientYRel = e.pageY - $(this).offset().top;
+            // console.log(clientXRel + ", " + clientYRel);
+
+                var pathArray = pathObject.attr('path');
+                // pathArray[0][1] = newx; // modifying the lineTo coordinates
+                // pathArray[0][2] = newy;
+                pathArray[1][1] = clientXRel;
+                pathArray[1][2] = clientYRel;
+
+                pathObject.attr({path: pathArray});
+
+                // console.log("hi");
+            }
+        });
+        canvas.mouseup(function () {
+            if (!cut) return;
+
+            dragging = false;
+            // console.log("up")
+
+            var done = false;
+
+            for (var i=0; i<currentMindmap.nodes.length; i++) {
+                // console.log("inside node " + i);
+                for (var j=0; j<currentMindmap.nodes[i].links.length; j++) {
+                // console.log("link " + j + " of node " + i);
+                // console.log(path.attr("path").toString())
+                // console.log(currentMindmap.nodes[i].links[j].attr("path"))
+// console.log(Raphael.pathIntersection(path.attr("path").toString(), currentMindmap.nodes[i].links[j].attr("path").toString()).toSource());
+                    if (Raphael.pathIntersection(
+                        pathObject.attr("path").toString(),
+                        currentMindmap.nodes[i].links[j].attr("path").toString()
+                    ).length > 0) {
+
+                        // console.log("intersection!");
+
+                        // cut that link
+                        currentMindmap.nodes[i].unlinkFrom(
+                            currentMindmap.nodes[i].linkMap[currentMindmap.nodes[i].links[j].id]);
+                        // currentMindmap.nodes[i].links[j].remove();
+                        done = true;
+                        break;
+                        // need an unlink function
+
+                        // // remove link from other node's list of links
+                        // var otherNode = that.linkMap[link.id];
+                        // otherNode.links.splice(otherNode.links.indexOf(link), 1);
+
+                        // // remove link from linked too
+                        // otherNode.linked.splice(otherNode.linked.indexOf(that), 1);
+                        // that.linkMap[link.id] = null; // null instead of undefiend to show that it was deleted
+
+                        // link.remove();
+                    }
+                }
+                if (done) break;
+            }
+
+            pathObject.remove();
+            pathObject = null;
+        });
+    })();
+
+    $("#oldLinkBtn").click(function () {
         if (currentMindmap.selected) {
             currentMindmap.linking = true;
         }
@@ -177,6 +291,10 @@ $(document).ready(function() {
         // draw a line between this node and all linked nodes
 
         function dragStart() {
+            if (linkActivated) {
+                linkDragStart();
+                return;
+            }
             // store original coordinates
             this.ox = this.attr("cx");
             this.oy = this.attr("cy");
@@ -184,6 +302,10 @@ $(document).ready(function() {
         }
 
         function dragMove(dx, dy) {
+            if (linkActivated) {
+                linkDragMove();
+                return;
+            }
             var newx = clamp(this.ox + dx, 0, CANVAS_WIDTH),
                 newy = clamp(this.oy + dy, 0, CANVAS_HEIGHT);
 
@@ -246,6 +368,11 @@ $(document).ready(function() {
             }
         }
         function dragEnd() {
+            if (linkActivated) {
+                linkDragEnd();
+                return;
+            }
+
             this.Node.beingDragged = false;
 
             if (draggedOver !== null) {
@@ -342,6 +469,30 @@ $(document).ready(function() {
 
         this.linkMap[path.id] = otherNode;
         otherNode.linkMap[path.id] = this;
+    };
+
+    Node.prototype.unlinkFrom = function(otherNode) {
+        // remove link references
+        this.linked.splice(this.linked.indexOf(otherNode), 1);
+        otherNode.linked.splice(otherNode.linked.indexOf(this), 1);
+
+        // remove the path object that serves as the link
+        // find it with an O(n) search
+        // (change later)
+        var that = this;
+        var path = this.links.filter(function (link) {
+            return that.linkMap[link.id] === otherNode;
+        })[0]; // there can be only 1 link between each distinct node pair
+
+        // remove it from either object's links
+        this.links.splice(this.links.indexOf(path), 1);
+        otherNode.links.splice(otherNode.links.indexOf(path), 1);
+
+        // remove it from either link map
+        this.linkMap[path.id] = null;
+        otherNode.linkMap[path.id] = null;
+
+        path.remove();
     };
 
     Node.prototype.isLinkedTo = function(otherNode) {
