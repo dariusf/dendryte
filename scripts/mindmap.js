@@ -111,15 +111,16 @@ $(document).ready(function() {
 
                 // REFACTOR: move the error checking into the linkto function
 
-                if (currentMindmap.selected.isLinkedTo(that.circle.Node)) {
+                if (firstNode.isLinkedTo(secondNode)) {
                     alert("those 2 nodes are already linked");
                     // should just have silent failure since alert messes with mousedown
-                } else if (currentMindmap.selected === that.circle.Node) {
+                } else if (firstNode === secondNode) {
                     alert("you can't link a node to itself");
                 } else {
                     firstNode.linkTo(secondNode);
                 }
             }
+            secondNode = null;
             pathObject.remove();
         }
         linkDragStart = start;
