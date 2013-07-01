@@ -144,15 +144,18 @@ $(document).ready(function() {
         canvas.mousedown(function (e) {
             if (!cut) return;
 
-            dragging = true;
+            // only triggers on canvas, not on nodes
+            if (e.target.nodeName === "svg") {
+                dragging = true;
 
-            // console.log("down")
+                // console.log("down")
 
-            var clientXRel = e.pageX- $(this).offset().left;
-            var clientYRel = e.pageY - $(this).offset().top;
-            // console.log(clientXRel + ", " + clientYRel);
+                var clientXRel = e.pageX- $(this).offset().left;
+                var clientYRel = e.pageY - $(this).offset().top;
+                // console.log(clientXRel + ", " + clientYRel);
 
-            pathObject = R.path("M " + clientXRel + "," + clientYRel + " L " + (clientXRel) + "," + (clientYRel) + " Z");
+                pathObject = R.path("M " + clientXRel + "," + clientYRel + " L " + (clientXRel) + "," + (clientYRel) + " Z");
+            }
         });
         canvas.mousemove(function (e) {
             if (!cut) return;
@@ -178,45 +181,47 @@ $(document).ready(function() {
         canvas.mouseup(function () {
             if (!cut) return;
 
+            if (dragging) {
             dragging = false;
             // console.log("up")
 
             var done = false;
 
-            for (var i=0; i<currentMindmap.nodes.length; i++) {
-                // console.log("inside node " + i);
-                for (var j=0; j<currentMindmap.nodes[i].links.length; j++) {
-                // console.log("link " + j + " of node " + i);
-                // console.log(path.attr("path").toString())
-                // console.log(currentMindmap.nodes[i].links[j].attr("path"))
-// console.log(Raphael.pathIntersection(path.attr("path").toString(), currentMindmap.nodes[i].links[j].attr("path").toString()).toSource());
-                    if (Raphael.pathIntersection(
-                        pathObject.attr("path").toString(),
-                        currentMindmap.nodes[i].links[j].attr("path").toString()
-                    ).length > 0) {
+                for (var i=0; i<currentMindmap.nodes.length; i++) {
+                    // console.log("inside node " + i);
+                    for (var j=0; j<currentMindmap.nodes[i].links.length; j++) {
+                    // console.log("link " + j + " of node " + i);
+                    // console.log(path.attr("path").toString())
+                    // console.log(currentMindmap.nodes[i].links[j].attr("path"))
+    // console.log(Raphael.pathIntersection(path.attr("path").toString(), currentMindmap.nodes[i].links[j].attr("path").toString()).toSource());
+                        if (Raphael.pathIntersection(
+                            pathObject.attr("path").toString(),
+                            currentMindmap.nodes[i].links[j].attr("path").toString()
+                        ).length > 0) {
 
-                        // console.log("intersection!");
+                            // console.log("intersection!");
 
-                        // cut that link
-                        currentMindmap.nodes[i].unlinkFrom(
-                            currentMindmap.nodes[i].linkMap[currentMindmap.nodes[i].links[j].id]);
-                        // currentMindmap.nodes[i].links[j].remove();
-                        done = true;
-                        break;
-                        // need an unlink function
+                            // cut that link
+                            currentMindmap.nodes[i].unlinkFrom(
+                                currentMindmap.nodes[i].linkMap[currentMindmap.nodes[i].links[j].id]);
+                            // currentMindmap.nodes[i].links[j].remove();
+                            done = true;
+                            break;
+                            // need an unlink function
 
-                        // // remove link from other node's list of links
-                        // var otherNode = that.linkMap[link.id];
-                        // otherNode.links.splice(otherNode.links.indexOf(link), 1);
+                            // // remove link from other node's list of links
+                            // var otherNode = that.linkMap[link.id];
+                            // otherNode.links.splice(otherNode.links.indexOf(link), 1);
 
-                        // // remove link from linked too
-                        // otherNode.linked.splice(otherNode.linked.indexOf(that), 1);
-                        // that.linkMap[link.id] = null; // null instead of undefiend to show that it was deleted
+                            // // remove link from linked too
+                            // otherNode.linked.splice(otherNode.linked.indexOf(that), 1);
+                            // that.linkMap[link.id] = null; // null instead of undefiend to show that it was deleted
 
-                        // link.remove();
+                            // link.remove();
+                        }
                     }
+                    if (done) break;
                 }
-                if (done) break;
             }
 
             pathObject.remove();
