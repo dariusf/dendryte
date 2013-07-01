@@ -46,17 +46,86 @@ $(document).ready(function() {
     $("#linkBtn").click(function () {
         linkActivated = !linkActivated;
         $("#linkBtn").html(linkActivated ? "stop linking" : "link");
-        console.log('link button');
+        // console.log('link button');
     });
-    function linkDragStart () {
-        console.log("start");
-    }
-    function linkDragMove (dx, dy) {
-        console.log("move");
-    }
-    function linkDragEnd () {
-        console.log("end");
-    }
+    var linkDragStart, linkDragMove, linkDragEnd;
+    (function () {
+        var pathObject, x, y,
+            firstNode, secondNode;
+
+        function start () {
+
+            // var clientXRel = e.pageX- $(this).offset().left;
+            // var clientYRel = e.pageY - $(this).offset().top;
+            // console.log(clientXRel + ", " + clientYRel);
+
+            // console.log(this.toSource());
+            x = this.attr("cx");
+            y = this.attr("cy");
+
+            firstNode = this.Node;
+            // do something to first node here
+
+            // this.ox = x;
+            // this.oy = y;
+
+            pathObject = R.path("M " + x + "," + y + " L " + x + "," + y + " Z");
+            pathObject.toBack();
+
+            // console.log("start");
+        }
+        function move (dx, dy) {
+            // console.log("move");
+
+            var pathArray = pathObject.attr('path');
+
+            // pathArray[0][1] = newx; // modifying the lineTo coordinates
+            // pathArray[0][2] = newy;
+            pathArray[1][1] = clamp(x + dx, 0, CANVAS_WIDTH);
+            pathArray[1][2] = clamp(y + dy, 0, CANVAS_HEIGHT);
+
+            // console.log('moving ' + pathArray[1][1] + ", " + pathArray[1][2]);
+
+            pathObject.attr({path: pathArray});
+
+            for (var i=0; i<currentMindmap.nodes.length; i++) {
+                // console.log("node " + i + " of current map");
+                if (currentMindmap.nodes[i] !== firstNode) {
+                    // console.log("found a node that is not the current");
+// console.log(distance(x, y, currentMindmap.nodes[i].circle.attr("cx"), currentMindmap.nodes[i].circle.attr("cy")));
+                    if (distance(x+dx, y+dy, currentMindmap.nodes[i].circle.attr("cx"), currentMindmap.nodes[i].circle.attr("cy")) < NODE_NORMAL_SIZE) {
+                        secondNode = currentMindmap.nodes[i];
+                        // animate it
+                        // console.log("yeah");
+                        break;
+                    }
+                }
+            }
+
+        }
+        function end () {
+            // console.log("end");
+
+            // revert both first and second node
+            if (secondNode) {
+
+                // REFACTOR: move the error checking into the linkto function
+
+                if (currentMindmap.selected.isLinkedTo(that.circle.Node)) {
+                    alert("those 2 nodes are already linked");
+                    // should just have silent failure since alert messes with mousedown
+                } else if (currentMindmap.selected === that.circle.Node) {
+                    alert("you can't link a node to itself");
+                } else {
+                    firstNode.linkTo(secondNode);
+                }
+            }
+            pathObject.remove();
+        }
+        linkDragStart = start;
+        linkDragMove = move;
+        linkDragEnd = end;
+    })();
 
     // define handlers for cut button
     (function () {
@@ -292,7 +361,7 @@ $(document).ready(function() {
 
         function dragStart() {
             if (linkActivated) {
-                linkDragStart();
+                linkDragStart.bind(this)();
                 return;
             }
             // store original coordinates
@@ -303,7 +372,7 @@ $(document).ready(function() {
 
         function dragMove(dx, dy) {
             if (linkActivated) {
-                linkDragMove();
+                linkDragMove.bind(this)(dx, dy);
                 return;
             }
             var newx = clamp(this.ox + dx, 0, CANVAS_WIDTH),
@@ -338,7 +407,7 @@ $(document).ready(function() {
             // handle drag collision
 
             function collision (c1, c2) {
-                return distance(c1.attr("cx"), c1.attr("cy"), c2.attr("cx"), c2.attr("cy")) < 50
+                return distance(c1.attr("cx"), c1.attr("cy"), c2.attr("cx"), c2.attr("cy")) < NODE_NORMAL_SIZE
             }
 
             if (draggedOver !== null) {
@@ -369,7 +438,7 @@ $(document).ready(function() {
         }
         function dragEnd() {
             if (linkActivated) {
-                linkDragEnd();
+                linkDragEnd.bind(this)();
                 return;
             }
 
