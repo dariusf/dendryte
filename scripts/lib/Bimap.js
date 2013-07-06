@@ -29,6 +29,23 @@ Bimap.prototype.get = function(key) {
 	}
 };
 
+// Keys and values are removed as pairs
+// Either keys or values can be used to remove a pair
+
+Bimap.prototype.remove = function(key) {
+	var value = this.get(key);
+
+	if (key) {
+		this.k2v[key.id] = null;
+		this.v2k[key.id] = null;
+	}
+
+	if (value) {
+		this.k2v[value.id] = null;
+		this.v2k[value.id] = null;
+	}
+};
+
 Bimap.prototype.clear = function() {
 	this.v2k = {};
 	this.k2v = {};

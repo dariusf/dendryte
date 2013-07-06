@@ -165,7 +165,8 @@ $(document).ready(function() {
 
                             // cut that link
                             currentMindmap.nodes[i].unlinkFrom(
-                                currentMindmap.nodes[i].linkMap[currentMindmap.nodes[i].links[j].id]);
+                                currentMindmap.nodes[i].linkMap.get(currentMindmap.nodes[i].links[j])
+                            );
                             done = true;
                             break;
                         }
@@ -437,8 +438,7 @@ $(document).ready(function() {
         });
         this.linked = []; // a list of nodes this node is linked to
         this.links = []; // a list of the links (paths) used to link this node to others
-        this.linkMap = {}; // maps link (path) id -> other node linked to
-        // possibly need a bimap for the above
+        this.linkMap = new Bimap(); // maps the above two items onto each other
 
         this.children = []; // a list of 'child' nodes (nodes 'inside' this one)
         this.parent = null;
@@ -643,8 +643,8 @@ $(document).ready(function() {
         this.links.push(path);
         otherNode.links.push(path);
 
-        this.linkMap[path.id] = otherNode;
-        otherNode.linkMap[path.id] = this;
+        this.linkMap.put(path, otherNode);
+        otherNode.linkMap.put(path, this);
     };
 
     Node.prototype.unlinkFrom = function(otherNode) {
@@ -657,7 +657,7 @@ $(document).ready(function() {
         // (change later)
         var that = this;
         var path = this.links.filter(function (link) {
-            return that.linkMap[link.id] === otherNode;
+            return that.linkMap.get(link) === otherNode;
         })[0]; // there can be only 1 link between each distinct node pair
 
         // remove it from either object's links
@@ -665,8 +665,8 @@ $(document).ready(function() {
         otherNode.links.splice(otherNode.links.indexOf(path), 1);
 
         // remove it from either link map
-        this.linkMap[path.id] = null;
-        otherNode.linkMap[path.id] = null;
+        this.linkMap.remove(path);
+        otherNode.linkMap.remove(path);
 
         path.remove();
     };
@@ -696,14 +696,12 @@ $(document).ready(function() {
         var that = this;
         this.links.forEach(function (link) {
             // remove link from other node's list of links
-
-            // can be done in reverse, by looping through the other linked nodes instead
-            var otherNode = that.linkMap[link.id];
+            var otherNode = that.linkMap.get(link);
             otherNode.links.splice(otherNode.links.indexOf(link), 1);
 
             // remove this node from other node's list of linked nodes
             otherNode.linked.splice(otherNode.linked.indexOf(that), 1);
-            that.linkMap[link.id] = null; // null instead of undefiend to show that it was deleted
+            that.linkMap.remove(link);
 
             link.remove();
         });
