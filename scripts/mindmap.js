@@ -165,7 +165,7 @@ $(document).ready(function() {
 
                             // cut that link
                             currentMindmap.nodes[i].unlinkFrom(
-                                currentMindmap.nodes[i].linkMap.get(currentMindmap.nodes[i].links[j])
+                                currentMindmap.nodes[i].linkToOtherNode[currentMindmap.nodes[i].links[j].id]
                             );
                             done = true;
                             break;
@@ -309,6 +309,7 @@ $(document).ready(function() {
 
         currentMindmap.nodes.forEach(function (node) {
             node.setPosition(c, r);
+            node.updateLinkPositions();
             c += buffer; // position of next node
             if (c + NODE_NORMAL_SIZE > CANVAS_WIDTH) {
                 c = 40 + NODE_NORMAL_SIZE;
@@ -438,7 +439,8 @@ $(document).ready(function() {
         });
         this.linked = []; // a list of nodes this node is linked to
         this.links = []; // a list of the links (paths) used to link this node to others
-        this.linkMap = new Bimap(); // maps the above two items onto each other
+        this.linkToOtherNode = {}; // double maps to avoid O(n) operations
+        this.otherNodeToLink = {};
 
         this.children = []; // a list of 'child' nodes (nodes 'inside' this one)
         this.parent = null;
@@ -480,21 +482,7 @@ $(document).ready(function() {
 
             this.Node.setPosition(newx, newy);
 
-            // update all links for this node
-            var linked = this.Node.linked,
-                links = this.Node.links;
-
-            for (var i=0; i<linked.length; i++) {
-                var path = links[i];
-                var pathArray = path.attr('path');
-
-                pathArray[0][1] = newx; // modifying the lineTo coordinates
-                pathArray[0][2] = newy;
-                pathArray[1][1] = linked[i].circle.attr('cx'); 
-                pathArray[1][2] = linked[i].circle.attr('cy');
-
-                path.attr({path: pathArray});
-            }
+            this.Node.updateLinkPositions();
 
             // handle drag collision
 
@@ -583,6 +571,9 @@ $(document).ready(function() {
             // manage selections
             currentMindmap.deselect();
             currentMindmap.select(that.circle.Node);
+            // that.circle.Node.linked.forEach(function (node) {
+            //     console.log(node.title);
+            // });
         });
 
         this.circle.dblclick(function (e) {
@@ -624,6 +615,20 @@ $(document).ready(function() {
         });
     };
 
+    Node.prototype.updateLinkPositions = function() {
+        for (var i=0; i<this.linked.length; i++) {
+            var path = this.links[i];
+            var pathArray = path.attr('path');
+
+            pathArray[0][1] = this.circle.attr("cx"); // modifying the lineTo coordinates
+            pathArray[0][2] = this.circle.attr("cy");
+            pathArray[1][1] = this.linked[i].circle.attr('cx'); 
+            pathArray[1][2] = this.linked[i].circle.attr('cy');
+
+            path.attr({path: pathArray});
+        }
+    };
+
     Node.prototype.linkTo = function(otherNode) {
         if (this.isLinkedTo(otherNode) ||
             this === otherNode) {
@@ -643,8 +648,11 @@ $(document).ready(function() {
         this.links.push(path);
         otherNode.links.push(path);
 
-        this.linkMap.put(path, otherNode);
-        otherNode.linkMap.put(path, this);
+        this.linkToOtherNode[path.id] = otherNode;
+        this.otherNodeToLink[otherNode.id] = path;
+
+        otherNode.linkToOtherNode[path.id] = this;
+        otherNode.otherNodeToLink[this.id] = path;
     };
 
     Node.prototype.unlinkFrom = function(otherNode) {
@@ -653,22 +661,19 @@ $(document).ready(function() {
         otherNode.linked.splice(otherNode.linked.indexOf(this), 1);
 
         // remove the path object that serves as the link
-        // find it with an O(n) search
-        // (change later)
-        var that = this;
-        var path = this.links.filter(function (link) {
-            return that.linkMap.get(link) === otherNode;
-        })[0]; // there can be only 1 link between each distinct node pair
+        var link = this.otherNodeToLink[otherNode.id];
 
         // remove it from either object's links
-        this.links.splice(this.links.indexOf(path), 1);
-        otherNode.links.splice(otherNode.links.indexOf(path), 1);
+        this.links.splice(this.links.indexOf(link), 1);
+        otherNode.links.splice(otherNode.links.indexOf(link), 1);
 
-        // remove it from either link map
-        this.linkMap.remove(path);
-        otherNode.linkMap.remove(path);
+        // remove it from both link maps
+        this.otherNodeToLink[otherNode.id] = null;
+        this.linkToOtherNode[link.id] = null;
+        otherNode.otherNodeToLink[this.id] = null;
+        otherNode.linkToOtherNode[link.id] = null;
 
-        path.remove();
+        link.remove();
     };
 
     Node.prototype.isLinkedTo = function(otherNode) {
@@ -694,22 +699,12 @@ $(document).ready(function() {
         this.label.remove();
 
         var that = this;
-        this.links.forEach(function (link) {
-            // remove link from other node's list of links
-            var otherNode = that.linkMap.get(link);
-            otherNode.links.splice(otherNode.links.indexOf(link), 1);
-
-            // remove this node from other node's list of linked nodes
-            otherNode.linked.splice(otherNode.linked.indexOf(that), 1);
-            that.linkMap.remove(link);
-
-            link.remove();
+        _.clone(this.linked).forEach(function (linkedTo) {
+            that.unlinkFrom(linkedTo);
         });
         this.children.forEach(function (child) {
             child.remove();
         });
-
-        // this.parentMindmap.remove(this);
     };
 });
 
