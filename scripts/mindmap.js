@@ -2,6 +2,7 @@ var NODE_NORMAL_SIZE = 40;
 var NODE_EXPANDED_SIZE = 60;
 var CANVAS_WIDTH = 800;
 var CANVAS_HEIGHT = 600;
+
 var DEBUG = false;
 
 $(document).ready(function() {
@@ -9,6 +10,7 @@ $(document).ready(function() {
     var R = Raphael("canvas", CANVAS_WIDTH, CANVAS_HEIGHT);
     var app = {};
     var currentMindmap = new Mindmap();
+    var root = currentMindmap;
     var currentLevel = 0;
 
     var linkActivated = false;
@@ -38,65 +40,44 @@ $(document).ready(function() {
     $("#canvas").click(function (e) {
         if (currentMindmap.selected && e.target.nodeName !== "circle") {
             currentMindmap.deselect();
-            $("#infopanel").val("");
-            $("#titlefield").val("");
         }
     });
 
     $("#linkBtn").click(function () {
         linkActivated = !linkActivated;
         $("#linkBtn").html(linkActivated ? "stop linking" : "link");
-        // console.log('link button');
     });
     var linkDragStart, linkDragMove, linkDragEnd;
     (function () {
-        var pathObject, x, y,
+        var pathObject,
+            x, y,
             firstNode, secondNode;
 
         function start () {
 
-            // var clientXRel = e.pageX- $(this).offset().left;
-            // var clientYRel = e.pageY - $(this).offset().top;
-            // console.log(clientXRel + ", " + clientYRel);
-
-            // console.log(this.toSource());
             x = this.attr("cx");
             y = this.attr("cy");
 
             firstNode = this.Node;
-            // do something to first node here
-
-            // this.ox = x;
-            // this.oy = y;
+            // cosmetics for first node
 
             pathObject = R.path("M " + x + "," + y + " L " + x + "," + y + " Z");
             pathObject.toBack();
-
-            // console.log("start");
         }
         function move (dx, dy) {
-            // console.log("move");
 
             var pathArray = pathObject.attr('path');
 
-            // pathArray[0][1] = newx; // modifying the lineTo coordinates
-            // pathArray[0][2] = newy;
             pathArray[1][1] = clamp(x + dx, 0, CANVAS_WIDTH);
             pathArray[1][2] = clamp(y + dy, 0, CANVAS_HEIGHT);
-
-            // console.log('moving ' + pathArray[1][1] + ", " + pathArray[1][2]);
 
             pathObject.attr({path: pathArray});
 
             for (var i=0; i<currentMindmap.nodes.length; i++) {
-                // console.log("node " + i + " of current map");
                 if (currentMindmap.nodes[i] !== firstNode) {
-                    // console.log("found a node that is not the current");
-// console.log(distance(x, y, currentMindmap.nodes[i].circle.attr("cx"), currentMindmap.nodes[i].circle.attr("cy")));
                     if (distance(x+dx, y+dy, currentMindmap.nodes[i].circle.attr("cx"), currentMindmap.nodes[i].circle.attr("cy")) < NODE_NORMAL_SIZE) {
                         secondNode = currentMindmap.nodes[i];
-                        // animate it
-                        // console.log("yeah");
+                        // animate the second node
                         break;
                     }
                 }
@@ -104,21 +85,11 @@ $(document).ready(function() {
 
         }
         function end () {
-            // console.log("end");
 
             // revert both first and second node
+
             if (secondNode) {
-
-                // REFACTOR: move the error checking into the linkto function
-
-                if (firstNode.isLinkedTo(secondNode)) {
-                    alert("those 2 nodes are already linked");
-                    // should just have silent failure since alert messes with mousedown
-                } else if (firstNode === secondNode) {
-                    alert("you can't link a node to itself");
-                } else {
-                    firstNode.linkTo(secondNode);
-                }
+                firstNode.linkTo(secondNode);
             }
             secondNode = null;
             pathObject.remove();
@@ -137,10 +108,9 @@ $(document).ready(function() {
         $("#cutBtn").click(function () {
             cut = !cut;
             $("#cutBtn").html(cut ? "stop cutting" : "cut");
-            // alert('cut button');
         });
 
-        var canvas = $("#canvas"); // a div
+        var canvas = $("#canvas");
         canvas.mousedown(function (e) {
 
             if (pathObject) {
@@ -159,7 +129,6 @@ $(document).ready(function() {
 
                 var clientXRel = e.pageX- $(this).offset().left;
                 var clientYRel = e.pageY - $(this).offset().top;
-                // console.log(clientXRel + ", " + clientYRel);
 
                 pathObject = R.path("M " + clientXRel + "," + clientYRel + " L " + (clientXRel) + "," + (clientYRel) + " Z");
             }
@@ -168,21 +137,15 @@ $(document).ready(function() {
             if (!cut) return;
 
             if (dragging) {
-            // console.log("moving")
 
                 var clientXRel = e.pageX- $(this).offset().left;
                 var clientYRel = e.pageY - $(this).offset().top;
-            // console.log(clientXRel + ", " + clientYRel);
 
                 var pathArray = pathObject.attr('path');
-                // pathArray[0][1] = newx; // modifying the lineTo coordinates
-                // pathArray[0][2] = newy;
                 pathArray[1][1] = clientXRel;
                 pathArray[1][2] = clientYRel;
 
                 pathObject.attr({path: pathArray});
-
-                // console.log("hi");
             }
         });
         canvas.mouseup(function () {
@@ -190,41 +153,21 @@ $(document).ready(function() {
 
             if (dragging) {
                 dragging = false;
-                // console.log("up")
 
                 var done = false;
 
                 for (var i=0; i<currentMindmap.nodes.length; i++) {
-                    // console.log("inside node " + i);
                     for (var j=0; j<currentMindmap.nodes[i].links.length; j++) {
-                    // console.log("link " + j + " of node " + i);
-                    // console.log(path.attr("path").toString())
-                    // console.log(currentMindmap.nodes[i].links[j].attr("path"))
-    // console.log(Raphael.pathIntersection(path.attr("path").toString(), currentMindmap.nodes[i].links[j].attr("path").toString()).toSource());
                         if (Raphael.pathIntersection(
                             pathObject.attr("path").toString(),
                             currentMindmap.nodes[i].links[j].attr("path").toString()
                         ).length > 0) {
 
-                            // console.log("intersection!");
-
                             // cut that link
                             currentMindmap.nodes[i].unlinkFrom(
                                 currentMindmap.nodes[i].linkMap[currentMindmap.nodes[i].links[j].id]);
-                            // currentMindmap.nodes[i].links[j].remove();
                             done = true;
                             break;
-                            // need an unlink function
-
-                            // // remove link from other node's list of links
-                            // var otherNode = that.linkMap[link.id];
-                            // otherNode.links.splice(otherNode.links.indexOf(link), 1);
-
-                            // // remove link from linked too
-                            // otherNode.linked.splice(otherNode.linked.indexOf(that), 1);
-                            // that.linkMap[link.id] = null; // null instead of undefiend to show that it was deleted
-
-                            // link.remove();
                         }
                     }
                     if (done) break;
@@ -238,14 +181,14 @@ $(document).ready(function() {
         });
     })();
 
-    $("#oldLinkBtn").click(function () {
-        if (currentMindmap.selected) {
-            currentMindmap.linking = true;
-        }
-        else {
-            alert("please select a node, click link, then click a second node")
-        }
-    });
+    // $("#oldLinkBtn").click(function () {
+    //     if (currentMindmap.selected) {
+    //         currentMindmap.linking = true;
+    //     }
+    //     else {
+    //         alert("please select a node, click link, then click a second node")
+    //     }
+    // });
 
     $("#delBtn").click(function () {
         if (currentMindmap.selected) {
@@ -254,7 +197,7 @@ $(document).ready(function() {
             currentMindmap.deselect();
         }
         else {
-            alert("please select a node to delete first");
+            // alert("please select a node to delete first");
         }
     });
 
@@ -271,31 +214,162 @@ $(document).ready(function() {
         }
     }
 
+    $("#saveBtn").click(function () {
+
+        var abstractMap = {
+            nodes: []
+        };
+
+        // This function creates an abstract representation of the mindmap
+        // by mutating abstractMap with the contents of rootMap
+        function save (map, abstractMap) {
+
+            // base case
+            if (map === null) return;
+
+            // for each node in the map,
+            _.forEach(map.nodes, function (node) {
+
+                // add an abstract represenation of it to the abstract map
+                var abstractNode = {
+                    title: node.title,
+                    desc: node.text,
+                    childmap: {
+                        nodes: []
+                    }
+                };
+                abstractMap.nodes.push(abstractNode);
+
+                // save links, ids (for linking), and location
+                
+                // recursively build each child map that was just created
+                save(node.childMindmap, abstractNode.childmap);
+
+            });
+        }
+
+        save(root, abstractMap);
+
+        console.log(JSON.stringify(abstractMap));
+
+    });
+
+    $("#loadBtn").click(function () {
+        var input = prompt("warning: this will clear your current mind map", "json to load");
+
+        try {
+            input = JSON.parse(input);
+        }
+        catch (e) {
+            console.log("Failed to parse JSON data");
+            return;
+        }
+
+        // save backup
+
+        // $("#saveBtn").click();
+
+        // delete current mind map
+
+        currentMindmap.nodes.forEach(function (node) {
+            node.remove();
+        });
+        // console.log(currentMindmap.toSource());
+
+        // This function generates the contents of currentMap
+        // from abstractMap
+        function load (currentMap, abstractMap) {
+            abstractMap.nodes.forEach(function (abstractNode) {
+                var node = currentMap.newNode(0, 0);
+                node.setText(abstractNode.text);
+                node.setTitle(abstractNode.title);
+                // restore id, links too
+
+                if (abstractNode.childmap.nodes.length > 0) {
+                    node.childMindmap = new Mindmap();
+                    load(node.childMindmap, abstractNode.childmap);
+                    node.childMindmap.clear();
+                }
+            });
+        }
+
+        load(currentMindmap, input);
+    });
+
+    $("#gridLayoutBtn").click(function () {
+        var maxNodesX = Math.floor(CANVAS_WIDTH / NODE_NORMAL_SIZE),
+            maxNodesY = Math.floor(CANVAS_HEIGHT / NODE_NORMAL_SIZE);
+
+        var buffer = 40 + NODE_NORMAL_SIZE * 2,
+            r = 40 + NODE_NORMAL_SIZE,
+            c = 40 + NODE_NORMAL_SIZE;
+
+        currentMindmap.nodes.forEach(function (node) {
+            node.setPosition(c, r);
+            c += buffer; // position of next node
+            if (c + NODE_NORMAL_SIZE > CANVAS_WIDTH) {
+                c = 40 + NODE_NORMAL_SIZE;
+                r += buffer;
+            }
+        });
+    });
+
+    // text fields
+
     $("#infopanel").bind("input propertychange", function() {
         if (currentMindmap.selected) {
-            currentMindmap.selected.text = $("#infopanel").val();
+            currentMindmap.selected.setText($("#infopanel").val());
         }
     });
 
     $("#titlefield").bind("input propertychange", function() {
         if (currentMindmap.selected) {
-            currentMindmap.selected.title = $("#titlefield").val();
-            currentMindmap.selected.label.attr({text: currentMindmap.selected.title});
+            currentMindmap.selected.setTitle($("#titlefield").val());
         }
     });
 
-    // should also interface with the info panels
+    // view
+    // a simple DRY abstraction
+    // can be a singleton because there's really only one view
+
+    var View = {
+        update: function () {
+            var titlefield = $("#titlefield"),
+                infopanel = $("#infopanel");
+
+            if (currentMindmap.selected === null) {
+                titlefield.val("");
+                infopanel.val("");
+                titlefield.prop('disabled', true);
+                infopanel.prop('disabled', true);
+            }
+            else {
+                titlefield.prop('disabled', false);
+                infopanel.prop('disabled', false);
+                titlefield.val(currentMindmap.selected.title);
+                infopanel.val(currentMindmap.selected.text);
+                titlefield.focus();
+            }
+        }
+    };
+
+    View.update();
+
+    // model classes
+
     function Mindmap (parent) {
         this.nodes = [];
         this.selected = null;
         this.parent = parent || null;
-        this.linking = false;
+        // this.linking = false;
     }
     Mindmap.prototype.newNode = function(x, y) {
         var nodeColours = ["#0000FF", "#00FF00", "#FF0000"],
             outlineColours = ["#000080", "#008000", "#800000"];
 
         if (!Mindmap.prototype.newNode.index) {
+            // a namespaced property for cycling node colours,
+            // nothing important
             Mindmap.prototype.newNode.index = 0;
         }
         Mindmap.prototype.newNode.index++;
@@ -307,6 +381,8 @@ $(document).ready(function() {
         });
         this.nodes.push(n);
         n.parentMindmap = this;
+
+        return n;
     };
     Mindmap.prototype.clear = function() {
         this.nodes.forEach(function (node) {
@@ -332,17 +408,22 @@ $(document).ready(function() {
             // this.selected.circle.attr({fill: "#0000FF"});
             this.selected.circle.attr({"stroke-width": 0});
             this.selected = null;
+            View.update();
         }
-        this.linking = false;
-        // update the interface too once more abstractions are in place
+        // this.linking = false;
     };
     Mindmap.prototype.select = function(node) {
         this.selected = node;
-        this.selected.circle.attr({"stroke-width": 5});
+        node.circle.attr({"stroke-width": 5});
+
+        node.circle.toFront();
+        node.label.toFront();
+
+        View.update();
         // node.circle.attr({fill: "#FF0000"});
     };
 
-    Node.index = 0;
+    // Node.index = 0;
     function Node(x, y, radius, options) {
         options = options || {};
         this.circle = R.circle(x, y, radius).attr({
@@ -352,27 +433,28 @@ $(document).ready(function() {
             opacity: 1,
             cursor: options.cursor || "default"
         });
-        this.linked = [];
-        this.links = [];
-        this.linkMap = {};
-        this.children = [];
+        this.linked = []; // a list of nodes this node is linked to
+        this.links = []; // a list of the links (paths) used to link this node to others
+        this.linkMap = {}; // maps link (path) id -> other node linked to
+        // possibly need a bimap for the above
+
+        this.children = []; // a list of 'child' nodes (nodes 'inside' this one)
         this.parent = null;
-        this.circle.Node = this; // reference to wrapper object
-        this.beingDragged = false;
-        this.draggedOver = null;
-        this.index = Node.index++; // not really needed, can use this.circle.id
-        this.title = DEBUG ? this.index.toString() : "";
         this.parentMindmap = currentMindmap;
         this.childMindmap = null;
 
-        var title = this.title;
-        this.circle.attr({title: title});
-        this.label = R.text(x, y - this.circle.attr("r") - 15, title);
+        this.circle.Node = this; // a reference to this wrapper object
+        this.beingDragged = false;
+        // this.draggedOver = null;
+        // this.index = Node.index++; // not really needed, can use this.circle.id
+        this.title = DEBUG ? this.circle.id.toString() : "";
+        this.text = "";
 
-        var that = this;
+        this.label = R.text(x, y - this.circle.attr("r") - 15, this.title);
+        this.setTitle(this.title)
+
+        var that = this; // lexical reference
         var draggedOver = null;
-
-        // draw a line between this node and all linked nodes
 
         function dragStart() {
             if (linkActivated) {
@@ -393,15 +475,7 @@ $(document).ready(function() {
             var newx = clamp(this.ox + dx, 0, CANVAS_WIDTH),
                 newy = clamp(this.oy + dy, 0, CANVAS_HEIGHT);
 
-            this.attr({cx: newx, cy: newy});
-
-            var radius = this.attr("r");
-            
-            // update text position
-            this.Node.label.attr({
-                x: newx,
-                y: newy - radius - 15
-            });
+            this.Node.setPosition(newx, newy);
 
             // update all links for this node
             var linked = this.Node.linked,
@@ -413,7 +487,7 @@ $(document).ready(function() {
 
                 pathArray[0][1] = newx; // modifying the lineTo coordinates
                 pathArray[0][2] = newy;
-                pathArray[1][1] = linked[i].circle.attr('cx');
+                pathArray[1][1] = linked[i].circle.attr('cx'); 
                 pathArray[1][2] = linked[i].circle.attr('cy');
 
                 path.attr({path: pathArray});
@@ -430,7 +504,6 @@ $(document).ready(function() {
                 if (collision(draggedOver.circle, that.circle)) {
                     // no change to draggedOver
                 } else {
-                    // use fixed sizes intead of relative
                     draggedOver.circle.animate({r: NODE_NORMAL_SIZE}, 300, ">");
                     // draggedOver.circle.attr({fill: "#0000FF"});
                     draggedOver = null;
@@ -491,33 +564,22 @@ $(document).ready(function() {
         }
 
         this.circle.drag(dragMove, dragStart, dragEnd);
-        this.circle.mousedown(function (ev, x, y) { // rename this
+        this.circle.mousedown(function (ev, x, y) {
             // if (ev.ctrlKey) {
             //     alert('ctrl key pressed');
             // }
-            // alert('click handler');
 
-            if (currentMindmap.linking) {
-                // link
-                if (currentMindmap.selected.isLinkedTo(that.circle.Node)) {
-                    alert("those 2 nodes are already linked");
-                    // should just have silent failure since alert messes with mousedown
-                } else if (currentMindmap.selected === that.circle.Node) {
-                    alert("you can't link a node to itself");
-                } else {
-                    currentMindmap.selected.linkTo(that.circle.Node);
-                }
-                currentMindmap.linking = false;
-            }
+            // legacy
+
+            // if (currentMindmap.linking) {
+            //     // link
+            //     currentMindmap.selected.linkTo(that.circle.Node);
+            //     currentMindmap.linking = false;
+            // }
 
             // manage selections
             currentMindmap.deselect();
             currentMindmap.select(that.circle.Node);
-            that.circle.toFront();
-
-            // update fields
-            $("#infopanel").val(that.circle.Node.text);
-            $("#titlefield").val(that.circle.Node.title);
         });
 
         this.circle.dblclick(function (e) {
@@ -528,6 +590,7 @@ $(document).ready(function() {
             else {
                 this.Node.childMindmap.parent = currentMindmap;
             }
+            currentMindmap.deselect();
             currentMindmap.clear();
             currentMindmap = this.Node.childMindmap;
             this.Node.childMindmap.draw();
@@ -539,13 +602,43 @@ $(document).ready(function() {
         });
     }
 
+    Node.prototype.id = function() {
+        return this.circle.id;
+    };
+
+    Node.prototype.setTitle = function(title) {
+        this.title = title;
+        this.label.attr({text: title});
+        this.circle.attr({title: title}); // tooltip
+    };
+
+    Node.prototype.setText = function(text) {
+        this.text = text;
+    };
+
+    Node.prototype.setPosition = function(x, y) {
+        this.circle.attr({cx: x, cy: y});
+        var radius = this.circle.attr("r");
+        this.label.attr({
+            x: x,
+            y: y - radius - 15
+        });
+    };
+
     Node.prototype.linkTo = function(otherNode) {
+        if (this.isLinkedTo(otherNode) ||
+            this === otherNode) {
+            return;
+        }
+
         // link to each other
         this.linked.push(otherNode);
         otherNode.linked.push(this);
 
         // create path
         var path = R.path("M " + this.circle.attr('cx') + "," + this.circle.attr('cy') + " L " + otherNode.circle.attr('cx') + "," + otherNode.circle.attr('cy') + " Z");
+        // path.attr({stroke:'#FF0000', 'stroke-width': 2 ,'arrow-end': 'classic-wide-long'});
+        // path.toFront();
         path.toBack();
 
         this.links.push(path);
@@ -600,13 +693,16 @@ $(document).ready(function() {
     Node.prototype.remove = function() {
         this.circle.remove();
         this.label.remove();
+
         var that = this;
         this.links.forEach(function (link) {
             // remove link from other node's list of links
+
+            // can be done in reverse, by looping through the other linked nodes instead
             var otherNode = that.linkMap[link.id];
             otherNode.links.splice(otherNode.links.indexOf(link), 1);
 
-            // remove link from linked too
+            // remove this node from other node's list of linked nodes
             otherNode.linked.splice(otherNode.linked.indexOf(that), 1);
             that.linkMap[link.id] = null; // null instead of undefiend to show that it was deleted
 

@@ -1,10 +1,14 @@
 <html>
     <head>
         <title>Dendryte</title>
-        <script type="text/javascript" src="../scripts/jquery-2.0.0.min.js"></script>
-        <script type="text/javascript" src="../scripts/raphael.js"></script>
+        <script type="text/javascript" src="../scripts/lib/jquery-2.0.2.min.js"></script>
+        <script type="text/javascript" src="../scripts/lib/raphael.js"></script>
+        <script type="text/javascript" src="../scripts/lib/underscore-min.js"></script>
+
         <script type="text/javascript" src="../scripts/mindmap.js"></script>
+
         <link rel="stylesheet" type="text/css" href="../stylesheets/styles.css">
+        
 		<link href="../bootstrap/css/bootstrap.css" rel="stylesheet">
 		<link href="../bootstrap/css/bootstrap-responsive.css" rel="stylesheet">
     </head>
@@ -39,13 +43,16 @@
 		</div> 
       </div>
 	  
-        <button id="oldLinkBtn">old link</button>
-        <button id="delBtn">delete</button>
-        <button id="upBtn">up</button>
-
+        <!-- <button id="oldLinkBtn">old link</button> -->
         <button id="linkBtn">link</button>
         <button id="cutBtn">cut</button>
-        <p>Double-click on the canvas to create a node. Drag and drop nodes into each other to create a hierarchy!</p>
+        <button id="delBtn">delete</button>
+        <button id="upBtn">up</button>
+        <button id="saveBtn">save</button>
+        <button id="loadBtn">load</button>
+        <button id="gridLayoutBtn">grid layout</button>
+
+        <div id="status">Double-click on the canvas to create a node. Drag and drop nodes into each other to create a hierarchy!</div>
 		<a href="/main">My Projects </a> >> My First Project 
 		<div id="breadcrumb"></div>
         <div class="columns" id="canvas">
