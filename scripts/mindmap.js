@@ -234,6 +234,8 @@ $(document).ready(function() {
                 var abstractNode = {
                     title: node.title,
                     desc: node.text,
+                    x: Math.floor(node.circle.attr("cx")),
+                    y: Math.floor(node.circle.attr("cy")),
                     childmap: {
                         nodes: []
                     }
@@ -241,6 +243,8 @@ $(document).ready(function() {
                 abstractMap.nodes.push(abstractNode);
 
                 // save links, ids (for linking), and location
+                // id will be a problem because the circle id changes every time
+                // and is used in a lot of places
                 
                 // recursively build each child map that was just created
                 save(node.childMindmap, abstractNode.childmap);
@@ -255,7 +259,8 @@ $(document).ready(function() {
     });
 
     $("#loadBtn").click(function () {
-        var input = prompt("warning: this will clear your current mind map", "json to load");
+        var input = prompt("warning: this will clear your current mind map", "{\"nodes\":[{\"title\":\"a\",\"desc\":\"\",\"childmap\":{\"nodes\":[]}},{\"title\":\"b\",\"desc\":\"\",\"childmap\":{\"nodes\":[]}},{\"title\":\"c\",\"desc\":\"\",\"childmap\":{\"nodes\":[]}},{\"title\":\"d\",\"desc\":\"\",\"childmap\":{\"nodes\":[]}},{\"title\":\"e\",\"desc\":\"\",\"childmap\":{\"nodes\":[]}},{\"title\":\"f\",\"desc\":\"\",\"childmap\":{\"nodes\":[]}},{\"title\":\"g\",\"desc\":\"\",\"childmap\":{\"nodes\":[]}},{\"title\":\"h\",\"desc\":\"\",\"childmap\":{\"nodes\":[]}},{\"title\":\"i\",\"desc\":\"\",\"childmap\":{\"nodes\":[]}},{\"title\":\"j\",\"desc\":\"\",\"childmap\":{\"nodes\":[]}},{\"title\":\"k\",\"desc\":\"\",\"childmap\":{\"nodes\":[]}},{\"title\":\"l\",\"desc\":\"\",\"childmap\":{\"nodes\":[]}}]}");
+        if (input === null) return; // dialog cancelled
 
         try {
             input = JSON.parse(input);
@@ -265,16 +270,12 @@ $(document).ready(function() {
             return;
         }
 
-        // save backup
-
-        // $("#saveBtn").click();
-
         // delete current mind map
 
         currentMindmap.nodes.forEach(function (node) {
             node.remove();
         });
-        // console.log(currentMindmap.toSource());
+        currentMindmap.nodes = [];
 
         // This function generates the contents of currentMap
         // from abstractMap
@@ -283,6 +284,7 @@ $(document).ready(function() {
                 var node = currentMap.newNode(0, 0);
                 node.setText(abstractNode.text);
                 node.setTitle(abstractNode.title);
+                node.setPosition(abstractNode.x, abstractNode.y);
                 // restore id, links too
 
                 if (abstractNode.childmap.nodes.length > 0) {
@@ -423,7 +425,7 @@ $(document).ready(function() {
         // node.circle.attr({fill: "#FF0000"});
     };
 
-    // Node.index = 0;
+    Node.index = 0;
     function Node(x, y, radius, options) {
         options = options || {};
         this.circle = R.circle(x, y, radius).attr({
@@ -445,9 +447,10 @@ $(document).ready(function() {
 
         this.circle.Node = this; // a reference to this wrapper object
         this.beingDragged = false;
-        // this.draggedOver = null;
-        // this.index = Node.index++; // not really needed, can use this.circle.id
-        this.title = DEBUG ? this.circle.id.toString() : "";
+
+        this.id = Node.index++;
+
+        this.title = DEBUG ? this.id.toString() : "";
         this.text = "";
 
         this.label = R.text(x, y - this.circle.attr("r") - 15, this.title);
@@ -602,10 +605,6 @@ $(document).ready(function() {
         });
     }
 
-    Node.prototype.id = function() {
-        return this.circle.id;
-    };
-
     Node.prototype.setTitle = function(title) {
         this.title = title;
         this.label.attr({text: title});
@@ -711,6 +710,8 @@ $(document).ready(function() {
         this.children.forEach(function (child) {
             child.remove();
         });
+
+        // this.parentMindmap.remove(this);
     };
 });
 
