@@ -13,7 +13,8 @@ $(document).ready(function() {
     var R = Raphael("canvas", CANVAS_WIDTH, CANVAS_HEIGHT),
         currentMindmap = new Mindmap(),
         root = currentMindmap, // a reference to the top-level mind map
-        currentLevel = 0; // current depth of the mind map
+        currentLevel = 0, // current depth of the mind map
+        canvas = $("#canvas");
 
     // Initialize breadcrumb
 
@@ -31,25 +32,35 @@ $(document).ready(function() {
 
     // Canvas size
 
+    var bigSize = false;
     $("#canvasSizeBtn").click(function () {
-        View.setCanvasSize(1920, 1080);
+        bigSize = !bigSize;
+        if (bigSize) {
+            View.setCanvasSize(1920, 1080);
+        }
+        else {
+            View.setCanvasSize(800, 600);
+        }
     });
 
     // Node creation
 
-    $("#canvas").dblclick(function (e) {
+    canvas.dblclick(function (e) {
         if (e.target.nodeName == "svg") {
             // This will only trigger if the actual canvas area is clicked,
             // not any other drawn elements
-            var clientXRel = e.pageX - $(this).offset().left;
-            var clientYRel = e.pageY - $(this).offset().top;
-            currentMindmap.newNode(clientXRel + $("#canvas").scrollLeft(), clientYRel + $("#canvas").scrollTop());
+
+            // relative position within element with scrolling taken into account
+            var x = e.pageX - $(this).offset().left + canvas.scrollLeft(),
+                y = e.pageY - $(this).offset().top + canvas.scrollTop();
+
+            currentMindmap.newNode(x, y);
         }
     });
 
     // Node selection
 
-    $("#canvas").click(function (e) {
+    canvas.click(function (e) {
         if (currentMindmap.selected && e.target.nodeName !== "circle") {
             // Only triggers when clicking outside circles
             currentMindmap.deselect();
@@ -129,7 +140,6 @@ $(document).ready(function() {
             $("#cutBtn").html(cut ? "stop cutting" : "cut");
         });
 
-        var canvas = $("#canvas");
         canvas.mousedown(function (e) {
 
             if (pathObject) {
@@ -146,10 +156,11 @@ $(document).ready(function() {
             if (e.target.nodeName === "svg") {
                 dragging = true;
 
-                var clientXRel = e.pageX- $(this).offset().left;
-                var clientYRel = e.pageY - $(this).offset().top;
+                // relative position within element with scrolling taken into account
+                var x = e.pageX - $(this).offset().left + canvas.scrollLeft(),
+                    y = e.pageY - $(this).offset().top + canvas.scrollTop();
 
-                pathObject = R.path("M " + clientXRel + "," + clientYRel + " L " + (clientXRel) + "," + (clientYRel) + " Z");
+                pathObject = R.path("M " + x + "," + y + " L " + x + "," + y + " Z");
             }
         });
         canvas.mousemove(function (e) {
@@ -157,12 +168,13 @@ $(document).ready(function() {
 
             if (dragging) {
 
-                var clientXRel = e.pageX- $(this).offset().left;
-                var clientYRel = e.pageY - $(this).offset().top;
+                // relative position within element with scrolling taken into account
+                var x = e.pageX - $(this).offset().left + canvas.scrollLeft(),
+                    y = e.pageY - $(this).offset().top + canvas.scrollTop();
 
                 var pathArray = pathObject.attr('path');
-                pathArray[1][1] = clientXRel;
-                pathArray[1][2] = clientYRel;
+                pathArray[1][1] = x;
+                pathArray[1][2] = y;
 
                 pathObject.attr({path: pathArray});
             }
@@ -373,9 +385,13 @@ $(document).ready(function() {
             }
         },
         setCanvasSize: function (width, height) {
+
             R.setSize(width, height);
-            // CANVAS_WIDTH = R.width;
-            // CANVAS_HEIGHT = R.height;
+
+            // Clamp the positions of every node to make sure they're inside the canvas
+            currentMindmap.nodes.forEach(function (node) {
+                node.setPosition(node.x(), node.y());
+            });
         }
     };
 
@@ -507,8 +523,8 @@ $(document).ready(function() {
                 return;
             }
 
-            var newx = clamp(this.ox + dx, 0, R.width),
-                newy = clamp(this.oy + dy, 0, R.height);
+            var newx = this.ox + dx,
+                newy = this.oy + dy;
 
             this.Node.setPosition(newx, newy);
             this.Node.updateLinkPositions();
@@ -630,7 +646,17 @@ $(document).ready(function() {
         this.text = text;
     };
 
+    Node.prototype.x = function() {
+        return this.circle.attr("cx");
+    };
+
+    Node.prototype.y = function() {
+        return this.circle.attr("cy");
+    };
+
     Node.prototype.setPosition = function(x, y) {
+        x = clamp(x, 0, R.width);
+        y = clamp(y, 0, R.height);
         this.circle.attr({cx: x, cy: y});
         var radius = this.circle.attr("r");
         this.label.attr({
