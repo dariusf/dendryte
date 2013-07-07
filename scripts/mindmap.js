@@ -29,15 +29,21 @@ $(document).ready(function() {
         }
     }
 
+    // Canvas size
+
+    $("#canvasSizeBtn").click(function () {
+        View.setCanvasSize(1920, 1080);
+    });
+
     // Node creation
 
     $("#canvas").dblclick(function (e) {
         if (e.target.nodeName == "svg") {
             // This will only trigger if the actual canvas area is clicked,
             // not any other drawn elements
-            var clientXRel = e.pageX- $(this).offset().left;
+            var clientXRel = e.pageX - $(this).offset().left;
             var clientYRel = e.pageY - $(this).offset().top;
-            currentMindmap.newNode(clientXRel, clientYRel);
+            currentMindmap.newNode(clientXRel + $("#canvas").scrollLeft(), clientYRel + $("#canvas").scrollTop());
         }
     });
 
@@ -80,8 +86,8 @@ $(document).ready(function() {
 
             var pathArray = pathObject.attr('path');
 
-            pathArray[1][1] = clamp(x + dx, 0, CANVAS_WIDTH);
-            pathArray[1][2] = clamp(y + dy, 0, CANVAS_HEIGHT);
+            pathArray[1][1] = clamp(x + dx, 0, R.width);
+            pathArray[1][2] = clamp(y + dy, 0, R.height);
 
             pathObject.attr({path: pathArray});
 
@@ -312,8 +318,8 @@ $(document).ready(function() {
     // Layout
 
     $("#gridLayoutBtn").click(function () {
-        var maxNodesX = Math.floor(CANVAS_WIDTH / NODE_NORMAL_SIZE),
-            maxNodesY = Math.floor(CANVAS_HEIGHT / NODE_NORMAL_SIZE);
+        // var maxNodesX = Math.floor(R.width / NODE_NORMAL_SIZE),
+        //     maxNodesY = Math.floor(R.height / NODE_NORMAL_SIZE);
 
         var buffer = 40 + NODE_NORMAL_SIZE * 2,
             r = 40 + NODE_NORMAL_SIZE,
@@ -323,7 +329,7 @@ $(document).ready(function() {
             node.setPosition(c, r);
             node.updateLinkPositions();
             c += buffer; // position of next node
-            if (c + NODE_NORMAL_SIZE > CANVAS_WIDTH) {
+            if (c + NODE_NORMAL_SIZE > R.width) {
                 c = 40 + NODE_NORMAL_SIZE;
                 r += buffer;
             }
@@ -365,6 +371,11 @@ $(document).ready(function() {
                 infopanel.val(currentMindmap.selected.text);
                 titlefield.focus();
             }
+        },
+        setCanvasSize: function (width, height) {
+            R.setSize(width, height);
+            // CANVAS_WIDTH = R.width;
+            // CANVAS_HEIGHT = R.height;
         }
     };
 
@@ -496,8 +507,8 @@ $(document).ready(function() {
                 return;
             }
 
-            var newx = clamp(this.ox + dx, 0, CANVAS_WIDTH),
-                newy = clamp(this.oy + dy, 0, CANVAS_HEIGHT);
+            var newx = clamp(this.ox + dx, 0, R.width),
+                newy = clamp(this.oy + dy, 0, R.height);
 
             this.Node.setPosition(newx, newy);
             this.Node.updateLinkPositions();

@@ -33,6 +33,7 @@
     border: solid black 1px;
     width: 800px;
     height: 600px;
+    overflow: auto;
 }
 
 .columns {
