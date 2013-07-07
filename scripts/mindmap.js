@@ -2,7 +2,7 @@ var NODE_NORMAL_SIZE = 40;
 var NODE_EXPANDED_SIZE = 60;
 var CANVAS_WIDTH = 800;
 var CANVAS_HEIGHT = 600;
-var DEFAULT_LOADED_STRING = "";
+var DEFAULT_LOADED_STRING = "{\"nodes\":[{\"id\":0,\"title\":\"0\",\"desc\":\"\",\"x\":248,\"y\":101,\"linked\":[1,2],\"childmap\":{\"nodes\":[{\"id\":6,\"title\":\"6\",\"desc\":\"\",\"x\":295,\"y\":99,\"linked\":[7],\"childmap\":{\"nodes\":[]}},{\"id\":7,\"title\":\"7\",\"desc\":\"\",\"x\":508,\"y\":93,\"linked\":[6],\"childmap\":{\"nodes\":[]}},{\"id\":8,\"title\":\"8\",\"desc\":\"\",\"x\":444,\"y\":167,\"linked\":[9],\"childmap\":{\"nodes\":[]}},{\"id\":9,\"title\":\"9\",\"desc\":\"\",\"x\":639,\"y\":139,\"linked\":[8],\"childmap\":{\"nodes\":[]}}]}},{\"id\":1,\"title\":\"1\",\"desc\":\"\",\"x\":424,\"y\":89,\"linked\":[0,2],\"childmap\":{\"nodes\":[]}},{\"id\":2,\"title\":\"2\",\"desc\":\"\",\"x\":307,\"y\":165,\"linked\":[1,0],\"childmap\":{\"nodes\":[]}},{\"id\":3,\"title\":\"3\",\"desc\":\"\",\"x\":556,\"y\":93,\"linked\":[5,4],\"childmap\":{\"nodes\":[]}},{\"id\":4,\"title\":\"4\",\"desc\":\"\",\"x\":711,\"y\":114,\"linked\":[5,3],\"childmap\":{\"nodes\":[]}},{\"id\":5,\"title\":\"5\",\"desc\":\"\",\"x\":638,\"y\":184,\"linked\":[3,4],\"childmap\":{\"nodes\":[]}}]}";
 
 var DEBUG = true;
 
@@ -185,7 +185,7 @@ $(document).ready(function() {
                 // relative position within element with scrolling taken into account
                 var x = e.pageX - $(this).offset().left + canvas.scrollLeft(),
                     y = e.pageY - $(this).offset().top + canvas.scrollTop();
-                    
+
                 var pathArray = pathObject.attr('path');
                 pathArray[1][1] = x;
                 pathArray[1][2] = y;
@@ -275,17 +275,20 @@ $(document).ready(function() {
 
                 // Add a represenation of it to the abstract map
                 var abstractNode = {
+                    id: node.id,
                     title: node.title,
                     desc: node.text,
                     x: Math.floor(node.circle.attr("cx")),
                     y: Math.floor(node.circle.attr("cy")),
+                    linked: [],
                     childmap: {
                         nodes: []
                     }
                 };
+                node.linked.forEach(function (linkedNode) {
+                    abstractNode.linked.push(linkedNode.id);
+                });
                 abstractMap.nodes.push(abstractNode);
-
-                // TODO: save links, ids (for linking)
 
                 // Recursively build each of the child maps that was just created
                 save(node.childMindmap, abstractNode.childmap);
@@ -318,22 +321,42 @@ $(document).ready(function() {
             node.remove();
         });
         currentMindmap.nodes = [];
+        Node.index = 0;
 
         // This function generates the contents of currentMap
         // from abstractMap
         function load (currentMap, abstractMap) {
+
             abstractMap.nodes.forEach(function (abstractNode) {
-                var node = currentMap.newNode(0, 0);
+
+                // Create a new node, passing it the id of the abstractNode
+                var node = currentMap.newNode(0, 0, abstractNode.id);
+
+                // Fill the various fields
                 node.setText(abstractNode.text);
                 node.setTitle(abstractNode.title);
                 node.setPosition(abstractNode.x, abstractNode.y);
-                // TODO: restore id and links
-
+                
+                // Recursively load child mind map if present
                 if (abstractNode.childmap.nodes.length > 0) {
                     node.childMindmap = new Mindmap();
                     load(node.childMindmap, abstractNode.childmap);
                     node.childMindmap.clear();
                 }
+            });
+
+
+            // Second pass: restores links after all nodes have been created
+            abstractMap.nodes.forEach(function (abstractNode) {
+
+                abstractNode.linked.forEach(function (id) {
+                    var first = currentMap.nodeMap[abstractNode.id],
+                        second = currentMap.nodeMap[id];
+
+                    if (!first.isLinkedTo(second)) {
+                        first.linkTo(second);
+                    }
+                });
             });
         }
 
@@ -417,8 +440,9 @@ $(document).ready(function() {
         this.nodes = [];
         this.selected = null;
         this.parent = parent || null;
+        this.nodeMap = {};
     }
-    Mindmap.prototype.newNode = function(x, y) {
+    Mindmap.prototype.newNode = function(x, y, id) {
         var nodeColours = ["#F56545", "#FFBB22", "#EEEE22", "#BBE535", "#77DDBB", "#66CCDD", "#B5C5C5"],
             outlineColours = ["#800000", "#FF8000", "#D9D900", "#008000", "#0000FF", "#000080", "#5C7676"];
 
@@ -434,8 +458,9 @@ $(document).ready(function() {
             fill: nodeColours[Mindmap.prototype.newNode.index % nodeColours.length],
             cursor: "move",
             stroke: outlineColours[Mindmap.prototype.newNode.index % nodeColours.length]
-        });
+        }, id);
         this.nodes.push(n);
+        this.nodeMap[n.id] = n;
         n.parentMindmap = this;
 
         return n;
@@ -478,7 +503,7 @@ $(document).ready(function() {
     };
 
     Node.index = 0; // Internal node index
-    function Node(x, y, radius, options) {
+    function Node(x, y, radius, options, id) {
         options = options || {};
         this.circle = R.circle(x, y, radius).attr({
             fill: options.fill || "#0000FF",
@@ -501,7 +526,17 @@ $(document).ready(function() {
         this.childMindmap = null;
 
         this.circle.Node = this; // A reference to this wrapper object
-        this.id = Node.index++;
+        // Assign a unique id to this node
+        if (id) {
+            // An id was passed in from loading a mind map
+            this.id = id;
+            // Ensure that id collisions don't occur for newly-created nodes
+            Node.index = Math.max(this.id + 1, Node.index);
+        }
+        else {
+            // Assign it a new id
+            this.id = Node.index++;
+        }
         var that = this; // Lexical reference
 
         // SVG elements
