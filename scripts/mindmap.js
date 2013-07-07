@@ -130,6 +130,13 @@ $(document).ready(function() {
 
     // Cutting links
 
+    // Prevent selection when dragging
+    // (Solves Chrome quirks with cut function)
+
+    canvas.mousedown(function (e) {
+        e.preventDefault();
+    });
+
     (function () {
         var dragging = false;
         var pathObject = null;
@@ -138,6 +145,12 @@ $(document).ready(function() {
         $("#cutBtn").click(function () {
             cut = !cut;
             $("#cutBtn").html(cut ? "stop cutting" : "cut");
+            if (cut) {
+                canvas.mousemove(mouseMoveHandler);
+            }
+            else {
+                canvas.unbind("mousemove", mouseMoveHandler);
+            }
         });
 
         canvas.mousedown(function (e) {
@@ -147,6 +160,7 @@ $(document).ready(function() {
                 // (chrome has this annoying quirk with selections
                 // which can only be avoided by clicking the canvas
                 // at least once)
+                // this has mostly been solved, but just in case
                 pathObject.remove();
             }
 
@@ -163,7 +177,7 @@ $(document).ready(function() {
                 pathObject = R.path("M " + x + "," + y + " L " + x + "," + y + " Z");
             }
         });
-        canvas.mousemove(function (e) {
+        var mouseMoveHandler = function (e) {
             if (!cut) return;
 
             if (dragging) {
@@ -171,14 +185,14 @@ $(document).ready(function() {
                 // relative position within element with scrolling taken into account
                 var x = e.pageX - $(this).offset().left + canvas.scrollLeft(),
                     y = e.pageY - $(this).offset().top + canvas.scrollTop();
-
+                    
                 var pathArray = pathObject.attr('path');
                 pathArray[1][1] = x;
                 pathArray[1][2] = y;
 
                 pathObject.attr({path: pathArray});
             }
-        });
+        };
         canvas.mouseup(function () {
             if (!cut) return;
 
