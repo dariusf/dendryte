@@ -39,10 +39,16 @@
       </div>
 
       <div class="row-fluid">
-		<h4><center>My Projects</center></h4>
-		<p><ul>+ <em>Create a new project </em></ul></p>
+		<h4>My Projects</h4>
+		<a href="/mindmap/new">+ <em>Create a new project </em></a>
 		<ul>
-			<li><a href="/index">My first project</a></li>
+			{% if mindmaps is notempty %}
+				{% for mindmap in mindmaps %}
+				<li><a href="/mindmap/{{mindmap.key()}}">{{ mindmap.title }}</a></li>
+				{% endfor %}
+			{% else %}
+				<li>No projects yet</li>
+			{% endif %}
 		</ul>
       </div>
     </div>

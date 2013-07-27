@@ -35,6 +35,7 @@ $(document).ready(function() {
     var bigSize = false;
     $("#canvasSizeBtn").click(function () {
         bigSize = !bigSize;
+        $("#canvasSizeBtn").html(bigSize ? "small canvas" : "big canvas");
         if (bigSize) {
             View.setCanvasSize(1920, 1080);
         }
@@ -300,6 +301,14 @@ $(document).ready(function() {
 
         console.log(JSON.stringify(abstractMap));
 
+        $.post("/save", {
+            title: $("#titleField").val(),
+            contents: JSON.stringify(abstractMap),
+            key: $("#keyField").val()
+        }, function (success) {
+            if (!success) alert("there was an error saving, please try again");
+        });
+
     });
 
     // Load
@@ -308,11 +317,16 @@ $(document).ready(function() {
         var input = prompt("warning: this will clear your current mind map", DEFAULT_LOADED_STRING);
         if (input === null) return; // dialog cancelled
 
+        loadMindMap(input);
+    });
+    function loadMindMap (input) {
+
+        // Verify data
         try {
             input = JSON.parse(input);
         }
         catch (e) {
-            console.log("Failed to parse JSON data");
+            console.log("Failed to parse JSON data: " + input);
             return;
         }
 
@@ -362,7 +376,7 @@ $(document).ready(function() {
 
         load(currentMindmap, input);
         console.log("Mind map successfully loaded");
-    });
+    }
 
     // Layout
 
@@ -659,7 +673,7 @@ $(document).ready(function() {
         });
 
         this.circle.dblclick(function (e) {
-
+            
             // Going into the double-clicked node
             // Create the new mind map if it doesn't yet exist
 
@@ -805,6 +819,13 @@ $(document).ready(function() {
             child.remove();
         });
     };
+
+    // Load data
+
+    var loadedData = $("#loadField").val();
+    if (loadedData) {
+        loadMindMap(unescape(loadedData));
+    }
 });
 
 // Random utility functions
