@@ -45,24 +45,24 @@
 		<a href="/mindmap/new">+ <em>Create a new project </em></a>
 		<br />
 		{% if mindmaps is notempty %}
-			{% for mindmap in mindmaps %}
 			<table class="table">
 			    <thead>
 			        <tr>
-			            <th>Project</th>
+			            <th>Title</th>
 			            <th>Last modified</th>
 			            <th></th>
 			        </tr>
 			    </thead>
 			    <tbody>
+					{% for mindmap in mindmaps %}
 			        <tr>
 						<td><a href="/mindmap/{{mindmap.key()}}">{{ mindmap.title }}</a></td>
 						<td>{{ mindmap.timestamp.date() }}, {{ mindmap.timestamp.strftime('%I:%M:%S %p') }}</td>
 						<td><a href="/delete/{{mindmap.key()}}">Delete</a></td>
 			        </tr>
+					{% endfor %}
 			    </tbody>
 			</table>
-			{% endfor %}
 		{% else %}
 			No projects yet.
 		{% endif %}
