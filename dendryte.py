@@ -3,7 +3,7 @@ import webapp2
 import jinja2
 import os
 import logging
-#import datetime
+import datetime
 
 from google.appengine.ext import db
 from google.appengine.api import users
@@ -25,7 +25,7 @@ class MindmapDocument(db.Model):
     # id = db.IntegerProperty()
     title = db.StringProperty()
     contents = db.StringProperty()
-    date = db.DateTimeProperty(auto_now_add=True)
+    timestamp = db.DateTimeProperty(auto_now_add=True)
 
 class Projects(webapp2.RequestHandler):
     def get(self):
@@ -108,6 +108,15 @@ class Mindmap(webapp2.RequestHandler):
         else:
             self.redirect(self.request.host_url)
 
+class Delete(webapp2.RequestHandler):
+    def get(self, data):
+        user = users.get_current_user()
+        if user:  # check if signed in
+            parent_key = db.Key.from_path('Person', users.get_current_user().email())
+
+            db.delete(urllib.unquote(data))
+            self.redirect('/projects')
+
 class Save(webapp2.RequestHandler):
     """ Handles post requests to save mind maps """
     def post(self):
@@ -152,6 +161,7 @@ class Save(webapp2.RequestHandler):
         self.redirect('/projects')
 
 app = webapp2.WSGIApplication([('/projects', Projects),
+                               ('/delete/(.*)?', Delete),
                                ('/mindmap/(.*)?', Mindmap),
                                ('/save', Save)],
                               debug=True)

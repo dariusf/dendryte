@@ -7,6 +7,8 @@
     <link href="../bootstrap/css/bootstrap.css" rel="stylesheet">
     <link href="../bootstrap/css/bootstrap-responsive.css" rel="stylesheet">
     <!--<link type="text/css" rel="stylesheet" href="../stylesheets/main.css">-->
+    <script type="text/javascript" src="../scripts/lib/jquery-2.0.2.min.js"></script>
+    <script type="text/javascript" src="projects.js"></script>
   </head>
   <body>
     <div class="container-fluid"> 
@@ -41,15 +43,29 @@
       <div class="row-fluid">
 		<h4>My Projects</h4>
 		<a href="/mindmap/new">+ <em>Create a new project </em></a>
-		<ul>
-			{% if mindmaps is notempty %}
-				{% for mindmap in mindmaps %}
-				<li><a href="/mindmap/{{mindmap.key()}}">{{ mindmap.title }}</a></li>
-				{% endfor %}
-			{% else %}
-				<li>No projects yet</li>
-			{% endif %}
-		</ul>
+		<br />
+		{% if mindmaps is notempty %}
+			{% for mindmap in mindmaps %}
+			<table class="table">
+			    <thead>
+			        <tr>
+			            <th>Project</th>
+			            <th>Last modified</th>
+			            <th></th>
+			        </tr>
+			    </thead>
+			    <tbody>
+			        <tr>
+						<td><a href="/mindmap/{{mindmap.key()}}">{{ mindmap.title }}</a></td>
+						<td>{{ mindmap.timestamp.date() }}, {{ mindmap.timestamp.strftime('%I:%M:%S %p') }}</td>
+						<td><a href="/delete/{{mindmap.key()}}">Delete</a></td>
+			        </tr>
+			    </tbody>
+			</table>
+			{% endfor %}
+		{% else %}
+			No projects yet.
+		{% endif %}
       </div>
     </div>
   </body>
