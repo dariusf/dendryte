@@ -39,3 +39,52 @@
 .columns {
     float: left;
 }
+
+#statusField {
+    vertical-align: middle;
+    /*display: table-cell;*/
+}
+
+#content {
+    /*margin: 40px;*/
+}
+/*
+.menuButton {
+    background-color: white;
+    border: solid black 1px;
+    border-radius: 8px;
+
+    width: 55px;
+    height: 55px;
+    background-repeat: no-repeat;
+}*/
+/*
+#linkBtn {
+    background-image: url(../img/icon_link.png);
+}
+#cutBtn {
+    background-image: url(../img/icon_cut.png);
+}
+#delBtn {
+    background-image: url(../img/icon_delete.png);
+}
+#upBtn {
+    background-image: url(../img/icon_up.png);
+}
+#canvasSizeBtn {
+    background-image: url(../img/icon_big.png);
+}
+#gridLayoutBtn {
+    background-image: url(../img/icon_grid.png);
+}
+*/
+
+.divider {
+    margin: 0px 5px;
+    color: #999999;
+}
+
+#statusField {
+    font-style: italic;
+    margin-left: 15px;
+}

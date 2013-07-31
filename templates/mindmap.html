@@ -11,6 +11,7 @@
         
 		<link href="../bootstrap/css/bootstrap.css" rel="stylesheet">
 		<link href="../bootstrap/css/bootstrap-responsive.css" rel="stylesheet">
+        <link rel="stylesheet" type="text/css" href="../bootstrap/img/font-awesome/css/font-awesome.css">
     </head>
 
     <body>
@@ -50,25 +51,30 @@
             </fieldset>
         </form>
  -->
-        <a href="/projects">Back</a><br />
-        <input type="text" id="titleField" value="{{ title }}"></input>
-        <input type="hidden" id="loadField" value="{{ contents }}" />
-        <input type="hidden" id="keyField" value="{{ key }}" />
-        <br />
+        <div id="content">
+            <a href="/projects">Back</a>
+            <br />
+            <input type="text" id="titleField" value="{{ title }}"></input>
+            <span id="statusField"></span>
 
-        <button id="linkBtn">link</button>
-        <button id="cutBtn">cut</button>
-        <button id="delBtn">delete</button>
-        <button id="upBtn">up</button>
-        <button id="saveBtn">save</button>
-        <button id="loadBtn">load</button>
-        <button id="canvasSizeBtn">big canvas</button>
-        <button id="gridLayoutBtn">grid layout</button>
+            <!-- Hidden fields for loading data -->
+            <input type="hidden" id="loadField" value="{{ contents }}" />
+            <input type="hidden" id="keyField" value="{{ key }}" />
+            <br />
 
-        <div id="status">Double-click on the canvas to create a node. Drag and drop nodes into each other to create a hierarchy!</div>
-		<div id="breadcrumb"></div>
-        <div class="columns" id="canvas"></div>
-        <textarea id="titlefield" class="columns" rows="1" cols="60"></textarea> <br /><br/>
-        <textarea id="infopanel" class="columns" rows="28" cols="60"></textarea>
+            <button class="btn" id="linkBtn" title="Link"><i class="icon icon-pencil"></i></button>
+            <button class="btn" id="cutBtn" title="Cut"><i class="icon icon-cut"></i></button>
+            <button class="btn" id="delBtn" title="Delete"><i class="icon icon-trash"></i></button>
+            <button class="btn" id="upBtn" title="Up"><i class="icon icon-hand-up"></i></button>
+            <button class="btn" id="saveBtn">save</button>
+            <!-- <button class="btn" id="loadBtn">load</button> -->
+            <button class="btn" id="canvasSizeBtn" title="Change canvas size"><i class="icon icon-resize-full"></i></button>
+            <button class="btn" id="gridLayoutBtn" title="Grid layout"><i class="icon icon-th"></i></button>
+
+            <div class="breadcrumb" id="breadcrumb"></div>
+            <div class="columns" id="canvas"></div>
+            <textarea id="titlefield" class="columns" rows="1" cols="60"></textarea> <br /><br/>
+            <textarea id="infopanel" class="columns" rows="28" cols="60"></textarea>            
+        </div>
     </body>
 </html>
