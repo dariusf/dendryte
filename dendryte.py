@@ -24,7 +24,7 @@ class MindmapDocument(db.Model):
     """ Models a mindmap with title, contents, and date """
     # id = db.IntegerProperty()
     title = db.StringProperty()
-    contents = db.StringProperty()
+    contents = db.TextProperty()
     timestamp = db.DateTimeProperty(auto_now_add=True)
 
 class Projects(webapp2.RequestHandler):
