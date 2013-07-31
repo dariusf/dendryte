@@ -1,72 +1,63 @@
-<!-- Main page for Dendryte after users have logged in-->
 <!DOCTYPE HTML>
 <html>
-  <head>
-    <title> Dendryte</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="../bootstrap/css/bootstrap.css" rel="stylesheet">
-    <link href="../bootstrap/css/bootstrap-responsive.css" rel="stylesheet">
-    <!--<link type="text/css" rel="stylesheet" href="../stylesheets/main.css">-->
-    <script type="text/javascript" src="../scripts/lib/jquery-2.0.2.min.js"></script>
-    <script type="text/javascript" src="projects.js"></script>
-  </head>
-  <body>
-    <div class="container-fluid"> 
+    <head>
+        <title> Dendryte</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link href="../bootstrap/css/bootstrap.css" rel="stylesheet">
+        <link href="../bootstrap/css/bootstrap-responsive.css" rel="stylesheet">
 
-      <!-- Top bar --> 
-      <div class="row-fluid top-container">  
-		<h1>Dendryte</h1>
-      </div>
-      <!-- End of top bar -->
+        <script type="text/javascript" src="../scripts/lib/jquery-2.0.2.min.js"></script>
+        <script type="text/javascript" src="projects.js"></script>
+    </head>
+    <body>
+        <div class="container-fluid"> 
 
-      <!-- Main navigation -->
-      <div class = "navbar navbar-inverse">
-		<div class = "navbar-inner">
-			<!--<div class = "container-fluid">
-				<button type="button" class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
-					<span class="icon-bar"></span>
-					<span class="icon-bar"></span>
-					<span class="icon-bar"></span>
-				</button>-->
-			<div class = "nav-collapse collapse">
-				<p class="navbar-text pull-right">
-					Welcome, {{ username }}. <a href = "{{ logout }}" class = "navbar-link">Log out</a>
-				</p>
-				<ul class = "nav">
-					<li> <a href="/">Home</a> </li>
-				</ul>
-			<!--</div>-->
-			</div>
-		</div> 
-      </div>
+        <!-- Banner --> 
+        <div class="row-fluid top-container">    
+        	<h1>Dendryte</h1>
+        </div>
 
-      <div class="row-fluid">
-		<h4>My Projects</h4>
-		<a href="/mindmap/new">+ <em>Create a new project </em></a>
-		<br />
-		{% if mindmaps is notempty %}
-			<table class="table">
-			    <thead>
-			        <tr>
-			            <th>Title</th>
-			            <th>Last modified</th>
-			            <th></th>
-			        </tr>
-			    </thead>
-			    <tbody>
-					{% for mindmap in mindmaps %}
-			        <tr>
-						<td><a href="/mindmap/{{mindmap.key()}}">{{ mindmap.title }}</a></td>
-						<td>{{ mindmap.timestamp.date() }}, {{ mindmap.timestamp.strftime('%I:%M:%S %p') }}</td>
-						<td><a href="/delete/{{mindmap.key()}}">Delete</a></td>
-			        </tr>
-					{% endfor %}
-			    </tbody>
-			</table>
-		{% else %}
-			No projects yet.
-		{% endif %}
-      </div>
-    </div>
-  </body>
+        <!-- Navbar -->
+        <div class = "navbar navbar-inverse">
+	        <div class = "navbar-inner">
+			        <div class = "nav-collapse collapse">
+			            <p class="navbar-text pull-right">
+			                Welcome, {{ username }}. <a href = "{{ logout }}" class = "navbar-link">Log out</a>
+			            </p>
+			            <ul class = "nav">
+			                <li> <a href="/">Home</a> </li>
+			            </ul>
+			        </div>
+	        	</div> 
+	        </div>
+
+        	<div class="row-fluid">
+		        <h4>My Projects</h4>
+		        <a href="/new">+ <em>Create a new project </em></a>
+		        <br />
+		        {% if mindmaps is notempty %}
+		            <table class="table">
+	                    <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Last modified</th>
+                                <th></th>
+                            </tr>
+	                    </thead>
+	                    <tbody>
+		                    {% for mindmap in mindmaps %}
+	                        <tr>
+		                        <td><a href="/mindmap/{{mindmap.key()}}">{{ mindmap.title }}</a></td>
+		                        <td>{{ mindmap.timestamp.date() }}, {{ mindmap.timestamp.strftime('%I:%M:%S %p') }}</td>
+		                        <td><a href="/delete/{{mindmap.key()}}">Delete</a></td>
+	                        </tr>
+		                    {% endfor %}
+	                    </tbody>
+		            </table>
+		        {% else %}
+		            No projects yet.
+		        {% endif %}
+            </div>
+        </div>
+    </body>
 </html>

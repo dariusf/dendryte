@@ -27,6 +27,7 @@ class MindmapDocument(db.Model):
     contents = db.TextProperty()
     timestamp = db.DateTimeProperty(auto_now_add=True)
 
+# Handlers
 class Projects(webapp2.RequestHandler):
     def get(self):
         user = users.get_current_user()
@@ -66,40 +67,23 @@ class Mindmap(webapp2.RequestHandler):
         user = users.get_current_user()
         if user:  # check if signed in
             parent_key = db.Key.from_path('Person', users.get_current_user().email())
-
-            # default mind map content
-            title = "Untitled"
-            contents = "{\"nodes\":[]}"
             
             stringkey = urllib.unquote(data)
+            record = db.get(stringkey)
 
-            if stringkey != "new":
-                # if this isn't a new mind map, query the database for
-                # its title and content
-                # key = db.Key(stringkey)
-                # query = db.GqlQuery("SELECT * "
-                #                     "FROM MindmapDocument "
-                #                     "WHERE ANCESTOR IS :1 AND __key__ = :2 ",
-                #                     parent_key, key)
-
-                # if query.count() == 0:
-                #     print "Error: record %s not found" % stringkey
-                # elif query.count() > 1:
-                #     print "Error: more than one record with key %s" % stringkey
-                # else:
-                #     # there's only one record
-                #     for record in query:
-                #         title = record.title
-                #         contents = record.contents
-                record = db.get(stringkey)
+            # initialize content for new mind maps
+            if record.title == None and record.contents == None:
+                title = "Untitled"
+                contents = "{\"nodes\":[]}"
+            else:
                 title = record.title
-                contents = record.contents
+                contents = urllib.quote(record.contents, "")
 
             template_values = {
                 'username': users.get_current_user().nickname(),
                 'logout': users.create_logout_url(self.request.host_url),
                 'title': title,
-                'contents': urllib.quote(contents, ""),
+                'contents': contents,
                 'key': stringkey # so we know where to save the mind map later
             }
 
@@ -117,50 +101,48 @@ class Delete(webapp2.RequestHandler):
             db.delete(urllib.unquote(data))
             self.redirect('/projects')
 
+class New(webapp2.RequestHandler):
+    def get(self):
+        user = users.get_current_user()
+        if user:  # check if signed in
+            parent_key = db.Key.from_path('Person', users.get_current_user().email())
+
+            # check if user is in database, create if not
+            parent_key = db.Key.from_path('Person', users.get_current_user().email())
+            person = db.get(parent_key)
+            if person == None:
+                newPerson = Person(key_name=users.get_current_user().email())
+                newPerson.put()
+
+            item = MindmapDocument(parent=parent_key)
+            key = item.put();
+
+            self.redirect('/mindmap/%s' % key)
+
 class Save(webapp2.RequestHandler):
     """ Handles post requests to save mind maps """
     def post(self):
-
         # check if user is in database, create if not
         parent_key = db.Key.from_path('Person', users.get_current_user().email())
         person = db.get(parent_key)
         if person == None:
-          newPerson = Person(key_name=users.get_current_user().email())
-          newPerson.put()
+            newPerson = Person(key_name=users.get_current_user().email())
+            newPerson.put()
 
         # determine which record to update
         stringkey = self.request.get('key')
-
-        if stringkey == "new":
-            # create a new mind map
-            item = MindmapDocument(parent=parent_key)
-        else:
-            # # load the current mind map and update it
-            # key = db.Key(urllib.unquote(stringkey))
-            # query = db.GqlQuery("SELECT * "
-            #                     "FROM MindmapDocument "
-            #                     "WHERE ANCESTOR IS :1 AND __key__ = :2 ",
-            #                     parent_key, key)
-
-            # if query.count() == 0:
-            #     print "Error: record %s not found" % stringkey
-            #     # create a new mind map
-            #     item = MindmapDocument(parent=parent_key)
-            # elif query.count() > 1:
-            #     print "Error: more than one record with key %s" % stringkey
-            # else:
-            #     for record in query:
-            #         item = record
-            item = db.get(stringkey)
+        item = db.get(stringkey)
 
         # update record
         item.title = self.request.get('title')
         item.contents = self.request.get('contents')
-        item.put();
+        key = item.put();
 
+        # not sure why this is needed, but it is
         self.redirect('/projects')
 
 app = webapp2.WSGIApplication([('/projects', Projects),
+                               ('/new', New),
                                ('/delete/(.*)?', Delete),
                                ('/mindmap/(.*)?', Mindmap),
                                ('/save', Save)],

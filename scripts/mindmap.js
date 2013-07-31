@@ -39,6 +39,7 @@ $(document).ready(function() {
 
         manager.registerChange = function () {
             statusField.html("Unsaved changes.");
+
             if (timer) clearTimeout(timer);
             timer = setTimeout(function () {
 
@@ -455,7 +456,6 @@ $(document).ready(function() {
     // Text fields
 
     $("#titleField").bind("input propertychange", function() {
-        // Mark mind map as dirty
         changeManager.registerChange();
     });
 
@@ -463,7 +463,6 @@ $(document).ready(function() {
         if (currentMindmap.selected) {
             currentMindmap.selected.setTitle($("#titlefield").val());
 
-            // Mark mind map as dirty
             changeManager.registerChange();
         }
     });
@@ -472,7 +471,6 @@ $(document).ready(function() {
         if (currentMindmap.selected) {
             currentMindmap.selected.setText($("#infopanel").val());
 
-            // Mark mind map as dirty
             changeManager.registerChange();
         }
     });
@@ -541,7 +539,6 @@ $(document).ready(function() {
         this.nodeMap[n.id] = n;
         n.parentMindmap = this;
 
-        // Mark mind map as dirty
         changeManager.registerChange();
 
         return n;
