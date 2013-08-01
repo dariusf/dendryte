@@ -349,7 +349,7 @@ $(document).ready(function() {
                 var abstractNode = {
                     id: node.id,
                     title: node.title,
-                    desc: node.text,
+                    text: node.text,
                     x: Math.floor(node.circle.attr("cx")),
                     y: Math.floor(node.circle.attr("cy")),
                     linked: [],
@@ -412,7 +412,6 @@ $(document).ready(function() {
         function load (currentMap, abstractMap) {
 
             abstractMap.nodes.forEach(function (abstractNode) {
-
                 // Create a new node, passing it the id of the abstractNode
                 var node = currentMap.newNode(0, 0, abstractNode.id);
 
