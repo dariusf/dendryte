@@ -31,6 +31,7 @@ $(document).ready(function() {
     }
 
     // Change Manager
+    // Monitors changes and triggers an autosave after a period of inactivity
 
     var changeManager = (function () {
         var timer,
@@ -39,6 +40,7 @@ $(document).ready(function() {
 
         manager.registerChange = function () {
             statusField.html("Unsaved changes.");
+            manager.unsavedChanges = true;
 
             if (timer) clearTimeout(timer);
             timer = setTimeout(function () {
@@ -47,6 +49,7 @@ $(document).ready(function() {
                 saveMindmap(function (success) {
                     if (success) {
                         statusField.html("Saved.");
+                        manager.unsavedChanges = false;
                     } else {
                         statusField.html("Error saving; please try again later.");
                     }
@@ -92,12 +95,14 @@ $(document).ready(function() {
         }
     });
 
-    // Node selection
+    // Node deselection
 
     canvas.click(function (e) {
         if (currentMindmap.selected && e.target.nodeName !== "circle") {
             // Only triggers when clicking outside circles
             currentMindmap.deselect();
+
+            // bind handler
         }
     });
 
@@ -564,6 +569,9 @@ $(document).ready(function() {
     Mindmap.prototype.deselect = function() {
         if (this.selected) {
             // this.selected.circle.attr({fill: "#0000FF"});
+            this.selected.bindClick();
+            this.selected.unbindDblClick();
+
             this.selected.circle.attr({"stroke-width": 0});
             this.selected = null;
             View.update();
@@ -576,6 +584,9 @@ $(document).ready(function() {
 
         node.circle.toFront();
         node.label.toFront();
+
+        node.unbindClick();
+        node.bindDblClick();
 
         View.update();
     };
@@ -729,16 +740,33 @@ $(document).ready(function() {
         }
 
         this.circle.drag(dragMove, dragStart, dragEnd);
-        this.circle.mousedown(function (ev, x, y) {
+
+        this.bindClick = function () {
+            this.circle.mousedown(mousedownHandler);
+        }
+        this.unbindClick = function () {
+            this.circle.unmousedown(mousedownHandler);
+        }
+
+        this.circle.mousedown(mousedownHandler);
+
+        function mousedownHandler (ev, x, y) {
             // if (ev.ctrlKey) {
             //     alert('ctrl key pressed');
             // }
 
             currentMindmap.deselect();
             currentMindmap.select(that.circle.Node);
-        });
+        }
 
-        this.circle.dblclick(function (e) {
+        this.bindDblClick = function () {
+            this.circle.dblclick(dblclickHandler);
+        }
+        this.unbindDblClick = function () {
+            this.circle.undblclick(dblclickHandler);
+        }
+
+        function dblclickHandler (e) {
             
             // Going into the double-clicked node
             // Create the new mind map if it doesn't yet exist
@@ -768,7 +796,7 @@ $(document).ready(function() {
             $("#breadcrumb").append($("<span class='divider'>/</span>"));
             $("#breadcrumb").append(crumbItem);
             currentCrumb = crumbItem;
-        });
+        }
     }
 
     Node.prototype.setTitle = function(title) {
