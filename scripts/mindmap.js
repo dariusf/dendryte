@@ -392,9 +392,13 @@ $(document).ready(function() {
     });
     function loadMindMap (input) {
 
+
+        console.log(input);
+        console.log(escape(input));
+        console.log(unescape(input));
         // Verify data
         try {
-            input = JSON.parse(input);
+            input = JSON.parse(unescape(input));
         }
         catch (e) {
             console.log("Failed to parse JSON data: " + input);
