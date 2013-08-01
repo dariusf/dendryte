@@ -72,12 +72,12 @@ class Mindmap(webapp2.RequestHandler):
             record = db.get(stringkey)
 
             # initialize content for new mind maps
-            if record.title == None and record.contents == None:
-                title = "Untitled"
-                contents = "{\"nodes\":[]}"
-            else:
-                title = record.title
-                contents = urllib.quote(record.contents, "")
+            # if record.title == None and record.contents == None:
+            #     title = "Untitled"
+            #     contents = 
+            # else:
+            title = record.title
+            contents = urllib.quote(record.contents, "")
 
             template_values = {
                 'username': users.get_current_user().nickname(),
@@ -115,6 +115,9 @@ class New(webapp2.RequestHandler):
                 newPerson.put()
 
             item = MindmapDocument(parent=parent_key)
+            item.title = "Untitled"
+            item.contents = "{\"nodes\":[]}"
+
             key = item.put();
 
             self.redirect('/mindmap/%s' % key)
