@@ -33,7 +33,18 @@ class Projects(webapp2.RequestHandler):
         user = users.get_current_user()
         if user: # check if signed in
 
+            # check if user is in database, create if not
             parent_key = db.Key.from_path('Person', users.get_current_user().email())
+            person = db.get(parent_key)
+            if person == None:
+                newPerson = Person(key_name=users.get_current_user().email())
+                newPerson.put()
+
+                tutorial = MindmapDocument(parent=parent_key)
+                tutorial.title = "Welcome!"
+                tutorial.contents = "{\"nodes\":[]}"
+                tutorial.put();
+
 
             query = db.GqlQuery("SELECT * "
                                 "FROM MindmapDocument "
@@ -105,14 +116,8 @@ class New(webapp2.RequestHandler):
     def get(self):
         user = users.get_current_user()
         if user:  # check if signed in
-            parent_key = db.Key.from_path('Person', users.get_current_user().email())
 
-            # check if user is in database, create if not
             parent_key = db.Key.from_path('Person', users.get_current_user().email())
-            person = db.get(parent_key)
-            if person == None:
-                newPerson = Person(key_name=users.get_current_user().email())
-                newPerson.put()
 
             item = MindmapDocument(parent=parent_key)
             item.title = "Untitled"
@@ -125,12 +130,8 @@ class New(webapp2.RequestHandler):
 class Save(webapp2.RequestHandler):
     """ Handles post requests to save mind maps """
     def post(self):
-        # check if user is in database, create if not
+
         parent_key = db.Key.from_path('Person', users.get_current_user().email())
-        person = db.get(parent_key)
-        if person == None:
-            newPerson = Person(key_name=users.get_current_user().email())
-            newPerson.put()
 
         # determine which record to update
         stringkey = self.request.get('key')
