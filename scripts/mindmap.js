@@ -392,10 +392,6 @@ $(document).ready(function() {
     });
     function loadMindMap (input) {
 
-
-        console.log(input);
-        console.log(escape(input));
-        console.log(unescape(input));
         // Verify data
         try {
             input = JSON.parse(unescape(input));
@@ -449,6 +445,7 @@ $(document).ready(function() {
         }
 
         load(currentMindmap, input);
+        console.log(JSON.stringify(input));
         console.log("Mind map successfully loaded");
     }
 
