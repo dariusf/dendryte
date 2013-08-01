@@ -32,7 +32,7 @@ $(document).ready(function() {
 
     // Change Manager
     // Monitors changes and triggers an autosave after a period of inactivity
-
+    
     var changeManager = (function () {
         var timer,
             statusField = $("#statusField"),
@@ -61,6 +61,19 @@ $(document).ready(function() {
 
         return manager;
     })();
+
+    // Confirmation dialog
+
+    $("#backLink").on("click", function(e) {
+        var link = this;
+
+        if (changeManager.unsavedChanges) {
+            e.preventDefault();
+            if (confirm("You have unsaved changes! Are you sure you want to quit?", "Unsaved Changes")) {
+                window.location = link.href;
+            }
+        }
+    });
 
     // Canvas size
 
