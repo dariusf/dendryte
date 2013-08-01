@@ -308,6 +308,7 @@ $(document).ready(function() {
     function upALevel () {
         if (currentMindmap.parent) {
             currentLevel--;
+            currentMindmap.deselect();
             currentMindmap.clear();
             currentMindmap.parent.draw();
             currentMindmap = currentMindmap.parent;
