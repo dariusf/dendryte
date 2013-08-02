@@ -1,0 +1,20 @@
+#canvas {
+    border: solid black 1px;
+    width: 800px;
+    height: 600px;
+    overflow: auto;
+}
+
+.columns {
+    float: left;
+}
+
+/* Breadcrumb divider */
+.divider {
+    margin: 0px 5px;
+    color: #999999;
+}
+
+textarea {
+	resize: none;
+}

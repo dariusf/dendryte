@@ -4,7 +4,7 @@ var CANVAS_WIDTH = 800;
 var CANVAS_HEIGHT = 600;
 var DEFAULT_LOADED_STRING = "{\"nodes\":[{\"id\":0,\"title\":\"0\",\"desc\":\"\",\"x\":248,\"y\":101,\"linked\":[1,2],\"childmap\":{\"nodes\":[{\"id\":6,\"title\":\"6\",\"desc\":\"\",\"x\":295,\"y\":99,\"linked\":[7],\"childmap\":{\"nodes\":[]}},{\"id\":7,\"title\":\"7\",\"desc\":\"\",\"x\":508,\"y\":93,\"linked\":[6],\"childmap\":{\"nodes\":[]}},{\"id\":8,\"title\":\"8\",\"desc\":\"\",\"x\":444,\"y\":167,\"linked\":[9],\"childmap\":{\"nodes\":[]}},{\"id\":9,\"title\":\"9\",\"desc\":\"\",\"x\":639,\"y\":139,\"linked\":[8],\"childmap\":{\"nodes\":[]}}]}},{\"id\":1,\"title\":\"1\",\"desc\":\"\",\"x\":424,\"y\":89,\"linked\":[0,2],\"childmap\":{\"nodes\":[]}},{\"id\":2,\"title\":\"2\",\"desc\":\"\",\"x\":307,\"y\":165,\"linked\":[1,0],\"childmap\":{\"nodes\":[]}},{\"id\":3,\"title\":\"3\",\"desc\":\"\",\"x\":556,\"y\":93,\"linked\":[5,4],\"childmap\":{\"nodes\":[]}},{\"id\":4,\"title\":\"4\",\"desc\":\"\",\"x\":711,\"y\":114,\"linked\":[5,3],\"childmap\":{\"nodes\":[]}},{\"id\":5,\"title\":\"5\",\"desc\":\"\",\"x\":638,\"y\":184,\"linked\":[3,4],\"childmap\":{\"nodes\":[]}}]}";
 
-var DEBUG = true;
+var DEBUG = false;
 
 $(document).ready(function() {
 
@@ -18,10 +18,10 @@ $(document).ready(function() {
 
     // Initialize breadcrumb
 
-    var button = $("<button>root</button>");
-    button.get(0).level = currentLevel++;
-    button.click(breadcrumbHandler);
-    $("#breadcrumb").append(button);
+    var currentCrumb = $("<li class='active'>root</li>");
+    currentCrumb.get(0).level = currentLevel++;
+    currentCrumb.click(breadcrumbHandler);
+    $("#breadcrumb").append(currentCrumb);
 
     function breadcrumbHandler () {
         var depth = currentLevel - this.level - 1;
@@ -30,12 +30,61 @@ $(document).ready(function() {
         }
     }
 
+    // Change Manager
+    // Monitors changes and triggers an autosave after a period of inactivity
+    
+    var changeManager = (function () {
+        var timer,
+            statusField = $("#statusField"),
+            manager = {};
+
+        manager.registerChange = function () {
+            statusField.html("Unsaved changes.");
+            manager.unsavedChanges = true;
+
+            if (timer) clearTimeout(timer);
+            timer = setTimeout(function () {
+
+                statusField.html("Saving...");
+                saveMindmap(function (success) {
+                    if (success) {
+                        statusField.html("Saved.");
+                        manager.unsavedChanges = false;
+                    } else {
+                        statusField.html("Error saving; please try again later.");
+                    }
+                });
+                timer = null;
+
+            }, 3000);
+        };
+
+        return manager;
+    })();
+
+    // Confirmation dialog
+
+    $("#backLink").on("click", function(e) {
+        var link = this;
+
+        if (changeManager.unsavedChanges) {
+            e.preventDefault();
+            if (confirm("You have unsaved changes! Are you sure you want to quit?", "Unsaved Changes")) {
+                window.location = link.href;
+            }
+        }
+    });
+
     // Canvas size
 
     var bigSize = false;
     $("#canvasSizeBtn").click(function () {
         bigSize = !bigSize;
-        $("#canvasSizeBtn").html(bigSize ? "small canvas" : "big canvas");
+
+        var icon = $($(this).children()[0]);
+        icon.removeClass(!bigSize ? "icon-resize-small" : "icon-resize-full");
+        icon.addClass(bigSize ? "icon-resize-small" : "icon-resize-full");
+
         if (bigSize) {
             View.setCanvasSize(1920, 1080);
         }
@@ -59,12 +108,14 @@ $(document).ready(function() {
         }
     });
 
-    // Node selection
+    // Node deselection
 
     canvas.click(function (e) {
         if (currentMindmap.selected && e.target.nodeName !== "circle") {
             // Only triggers when clicking outside circles
             currentMindmap.deselect();
+
+            // bind handler
         }
     });
 
@@ -74,7 +125,9 @@ $(document).ready(function() {
 
     $("#linkBtn").click(function () {
         linkActivated = !linkActivated;
-        $("#linkBtn").html(linkActivated ? "stop linking" : "link");
+        var icon = $($(this).children()[0]);
+        icon.removeClass(!linkActivated ? "icon-remove" : "icon-pencil");
+        icon.addClass(linkActivated ? "icon-remove" : "icon-pencil");
     });
 
     var linkDragStart, linkDragMove, linkDragEnd;
@@ -116,6 +169,8 @@ $(document).ready(function() {
         }
         function end () {
 
+            changeManager.registerChange();
+
             // revert both first and second node
 
             if (secondNode) {
@@ -145,7 +200,11 @@ $(document).ready(function() {
 
         $("#cutBtn").click(function () {
             cut = !cut;
-            $("#cutBtn").html(cut ? "stop cutting" : "cut");
+
+            var icon = $($(this).children()[0]);
+            icon.removeClass(!cut ? "icon-remove" : "icon-cut");
+            icon.addClass(cut ? "icon-remove" : "icon-cut");
+
             if (cut) {
                 canvas.mousemove(mouseMoveHandler);
             }
@@ -235,6 +294,8 @@ $(document).ready(function() {
             currentMindmap.remove(currentMindmap.selected);
             currentMindmap.selected.remove();
             currentMindmap.deselect();
+
+            changeManager.registerChange();
         }
         else {
             // alert("please select a node to delete first");
@@ -247,10 +308,19 @@ $(document).ready(function() {
     function upALevel () {
         if (currentMindmap.parent) {
             currentLevel--;
+            currentMindmap.deselect();
             currentMindmap.clear();
             currentMindmap.parent.draw();
             currentMindmap = currentMindmap.parent;
-            $("#breadcrumb button").last().remove();
+
+            currentCrumb.remove();
+            // select all spans in the breadcrumb and remove the last
+            // (remove the divider)
+            $("#breadcrumb span").last().remove();
+            // make new one active and no longer a link
+            currentCrumb = currentCrumb.get(0).parent;
+            currentCrumb.addClass("active");
+            currentCrumb.html(currentCrumb.find("a").html());
         } else {
             // alert("top level reached already")
         }
@@ -259,7 +329,9 @@ $(document).ready(function() {
     // Save
 
     $("#saveBtn").click(function () {
-
+        saveMindmap(null);
+    });
+    function saveMindmap (callback) {
         var abstractMap = {
             nodes: []
         };
@@ -278,7 +350,7 @@ $(document).ready(function() {
                 var abstractNode = {
                     id: node.id,
                     title: node.title,
-                    desc: node.text,
+                    text: node.text,
                     x: Math.floor(node.circle.attr("cx")),
                     y: Math.floor(node.circle.attr("cy")),
                     linked: [],
@@ -306,10 +378,9 @@ $(document).ready(function() {
             contents: JSON.stringify(abstractMap),
             key: $("#keyField").val()
         }, function (success) {
-            if (!success) alert("there was an error saving, please try again");
+            if (callback) callback(!!success);
         });
-
-    });
+    }
 
     // Load
 
@@ -323,7 +394,7 @@ $(document).ready(function() {
 
         // Verify data
         try {
-            input = JSON.parse(input);
+            input = JSON.parse(unescape(input));
         }
         catch (e) {
             console.log("Failed to parse JSON data: " + input);
@@ -342,7 +413,6 @@ $(document).ready(function() {
         function load (currentMap, abstractMap) {
 
             abstractMap.nodes.forEach(function (abstractNode) {
-
                 // Create a new node, passing it the id of the abstractNode
                 var node = currentMap.newNode(0, 0, abstractNode.id);
 
@@ -375,6 +445,7 @@ $(document).ready(function() {
         }
 
         load(currentMindmap, input);
+        console.log(JSON.stringify(input));
         console.log("Mind map successfully loaded");
     }
 
@@ -397,19 +468,29 @@ $(document).ready(function() {
                 r += buffer;
             }
         });
+
+        changeManager.registerChange();
     });
 
     // Text fields
 
+    $("#titleField").bind("input propertychange", function() {
+        changeManager.registerChange();
+    });
+
     $("#titlefield").bind("input propertychange", function() {
         if (currentMindmap.selected) {
             currentMindmap.selected.setTitle($("#titlefield").val());
+
+            changeManager.registerChange();
         }
     });
 
     $("#infopanel").bind("input propertychange", function() {
         if (currentMindmap.selected) {
             currentMindmap.selected.setText($("#infopanel").val());
+
+            changeManager.registerChange();
         }
     });
 
@@ -477,6 +558,8 @@ $(document).ready(function() {
         this.nodeMap[n.id] = n;
         n.parentMindmap = this;
 
+        changeManager.registerChange();
+
         return n;
     };
     Mindmap.prototype.clear = function() {
@@ -500,6 +583,9 @@ $(document).ready(function() {
     Mindmap.prototype.deselect = function() {
         if (this.selected) {
             // this.selected.circle.attr({fill: "#0000FF"});
+            this.selected.bindClick();
+            this.selected.unbindDblClick();
+
             this.selected.circle.attr({"stroke-width": 0});
             this.selected = null;
             View.update();
@@ -512,6 +598,9 @@ $(document).ready(function() {
 
         node.circle.toFront();
         node.label.toFront();
+
+        node.unbindClick();
+        node.bindDblClick();
 
         View.update();
     };
@@ -629,6 +718,8 @@ $(document).ready(function() {
                 return;
             }
 
+            changeManager.registerChange();
+
             this.Node.beingDragged = false;
 
             if (draggedOver !== null) {
@@ -663,16 +754,33 @@ $(document).ready(function() {
         }
 
         this.circle.drag(dragMove, dragStart, dragEnd);
-        this.circle.mousedown(function (ev, x, y) {
+
+        this.bindClick = function () {
+            this.circle.mousedown(mousedownHandler);
+        }
+        this.unbindClick = function () {
+            this.circle.unmousedown(mousedownHandler);
+        }
+
+        this.circle.mousedown(mousedownHandler);
+
+        function mousedownHandler (ev, x, y) {
             // if (ev.ctrlKey) {
             //     alert('ctrl key pressed');
             // }
 
             currentMindmap.deselect();
             currentMindmap.select(that.circle.Node);
-        });
+        }
 
-        this.circle.dblclick(function (e) {
+        this.bindDblClick = function () {
+            this.circle.dblclick(dblclickHandler);
+        }
+        this.unbindDblClick = function () {
+            this.circle.undblclick(dblclickHandler);
+        }
+
+        function dblclickHandler (e) {
             
             // Going into the double-clicked node
             // Create the new mind map if it doesn't yet exist
@@ -691,12 +799,18 @@ $(document).ready(function() {
 
             // Update breadcrumb
 
+            currentCrumb.removeClass("active");
+            currentCrumb.html("<a>" + currentCrumb.html() + "</a>");
+
             var name = this.Node.title.trim() === "" ? "untitled node" : this.Node.title;
-            var button = $("<button>" + name + "</button>");
-            button.get(0).level = currentLevel++;
-            button.click(breadcrumbHandler);
-            $("#breadcrumb").append(button);
-        });
+            var crumbItem = $("<li class='active'>" + name + "</li>");
+            crumbItem.get(0).level = currentLevel++;
+            crumbItem.get(0).parent = currentCrumb;
+            crumbItem.click(breadcrumbHandler);
+            $("#breadcrumb").append($("<span class='divider'>/</span>"));
+            $("#breadcrumb").append(crumbItem);
+            currentCrumb = crumbItem;
+        }
     }
 
     Node.prototype.setTitle = function(title) {
@@ -826,6 +940,7 @@ $(document).ready(function() {
     if (loadedData) {
         loadMindMap(unescape(loadedData));
     }
+
 });
 
 // Random utility functions
