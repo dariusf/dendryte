@@ -18,53 +18,55 @@
         <div class="container-fluid"> 
 
 
-      <!-- Top bar --> 
-      <div class="row-fluid top-container">  
-		<!--<h1>Dendryte</h1>-->
-		<img src="images/dendrytebanner.png" alt="banner" />
-      </div>
-      <!-- End of top bar -->
+		<!-- Top bar --> 
+		<div class="row-fluid top-container">  
+			<!--<h1>Dendryte</h1>-->
+			<img src="images/dendrytebanner.png" alt="banner" />
+		</div>
+		<!-- End of top bar -->
 
-        <!-- Navbar -->
-        <div class = "navbar navbar-inverse">
-            <div class = "navbar-inner">
-                <div class = "nav-collapse collapse">
-                    <p class="navbar-text pull-right">
-                        Welcome, {{ username }}. <a href = "{{ logout }}" class = "navbar-link">Log out</a>
-                    </p>
-                    <ul class = "nav">
-                        <li> <a href="/">Home</a> </li>
-                    </ul>
-                </div>
-            </div> 
-        </div>
+		<div class="container">
+			<!-- Navbar -->
+			<div class = "navbar navbar-inverse">
+				<div class = "navbar-inner">
+					<div class = "nav-collapse collapse">
+						<p class="navbar-text pull-right">
+							Welcome, {{ username }}. <a href = "{{ logout }}" class = "navbar-link">Log out</a>
+						</p>
+						<ul class = "nav">
+							<li> <a href="/">Home</a> </li>
+						</ul>
+					</div>
+				</div> 
+			</div>
 
-        <!-- Hidden fields for loading data -->
-        <input type="hidden" id="loadField" value="{{ contents }}" />
-        <input type="hidden" id="keyField" value="{{ key }}" />
+			<!-- Hidden fields for loading data -->
+			<input type="hidden" id="loadField" value="{{ contents }}" />
+			<input type="hidden" id="keyField" value="{{ key }}" />
 
-        <!-- Main interface -->
-        <a href="/projects" id="backLink">Back</a>
-        <br />
-        <input type="text" id="titleField" value="{{ title }}"></input>
-        <br />
-        <button class="btn" id="linkBtn" title="Link"><i class="icon icon-pencil"></i></button>
-        <button class="btn" id="cutBtn" title="Cut"><i class="icon icon-cut"></i></button>
-        <button class="btn" id="delBtn" title="Delete"><i class="icon icon-trash"></i></button>
-        <button class="btn" id="upBtn" title="Up"><i class="icon icon-level-up"></i></button>
-        <!-- <button class="btn" id="saveBtn">save</button> -->
-        <!-- <button class="btn" id="loadBtn">load</button> -->
-        <button class="btn" id="canvasSizeBtn" title="Change canvas size"><i class="icon icon-resize-full"></i></button>
-        <button class="btn" id="gridLayoutBtn" title="Grid layout"><i class="icon icon-th"></i></button>
-        <span id="statusField" class="label">Hello.</span>
+			<!-- Main interface -->
+			<a href="/projects" id="backLink">Back</a>
+			<br />
+			<input type="text" id="titleField" value="{{ title }}"></input>
+			<br />
+			<button class="btn" id="linkBtn" title="Link"><i class="icon icon-pencil"></i></button>
+			<button class="btn" id="cutBtn" title="Cut"><i class="icon icon-cut"></i></button>
+			<button class="btn" id="delBtn" title="Delete"><i class="icon icon-trash"></i></button>
+			<button class="btn" id="upBtn" title="Up"><i class="icon icon-level-up"></i></button>
+			<!-- <button class="btn" id="saveBtn">save</button> -->
+			<!-- <button class="btn" id="loadBtn">load</button> -->
+			<button class="btn" id="canvasSizeBtn" title="Change canvas size"><i class="icon icon-resize-full"></i></button>
+			<button class="btn" id="gridLayoutBtn" title="Grid layout"><i class="icon icon-th"></i></button>
+			<span id="statusField" class="label">Hello.</span>
 
-        <div class="breadcrumb" id="breadcrumb"></div>
-        <div class="columns" id="canvas"></div>
-        <textarea id="titlefield" class="columns" rows="1" cols="60"></textarea>
-        <!-- 3 linebreaks, ok -->
-        <br />
-        <br />
-        <br />
-        <textarea id="infopanel" class="columns" rows="26" cols="60"></textarea>            
+			<div class="breadcrumb" id="breadcrumb"></div>
+			<div class="columns" id="canvas"></div>
+			<textarea id="titlefield" class="columns" rows="1" cols="60"></textarea>
+			<!-- 3 linebreaks, ok -->
+			<br />
+			<br />
+			<br />
+			<textarea id="infopanel" class="columns" rows="26" cols="60"></textarea>
+		</div>		
     </body>
 </html>
