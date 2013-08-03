@@ -22,16 +22,23 @@
 			<!-- Navbar -->
 			<div class = "navbar navbar-inverse">
 				<div class = "navbar-inner">
-						<div class = "nav-collapse collapse">
-							<p class="navbar-text pull-right">
-								Welcome, {{ username }}. <a href = "{{ logout }}" class = "navbar-link">Log out</a>
-							</p>
-							<ul class = "nav">
-								<li> <a href="/">Home</a> </li>
-							</ul>
-						</div>
-					</div> 
-				</div>
+					<div class="container">
+						<a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+							<span class="icon-bar"></span>
+							<span class="icon-bar"></span>
+							<span class="icon-bar"></span>
+						</a>
+						<a class="brand" href="/">Dendryte</a>
+						<div class="nav-collapse collapse">
+						<ul class="nav">
+							<li class="active"><a href="/"><i class="icon-home icon-white"></i>Home</a></li>
+						</ul>
+						Welcome, {{ username }}. <a class="btn btn-primary pull-right" href="{{ logout }}">Log out</a>
+						</div> <!--- End of Collapse ---->
+					</div> <!-- End of Container ---->
+				</div> <!-- End of Navbar-inner ---->
+			</div> <!-- End of Navbar ---->
+
 			
 				<div class="row-fluid">
 					<h4>My Projects</h4>

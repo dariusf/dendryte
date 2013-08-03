@@ -6,6 +6,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link href="../bootstrap/css/bootstrap.css" rel="stylesheet">
         <link href="../bootstrap/css/bootstrap-responsive.css" rel="stylesheet">
+		<script src="../bootstrap/js/bootstrap.min.js"></script>
         <link type="text/css" rel="stylesheet" href="../stylesheets/front.css">
     </head>
     <body>
@@ -22,16 +23,22 @@
 				<!-- Navbar -->
 				<div class = "navbar navbar-inverse">
 					<div class = "navbar-inner">
-						<div class = "nav-collapse collapse">
-							<p class="navbar-text pull-right">
-								<a href = "/projects" class = "navbar-link">Log in</a>
-							</p>
-							<ul class = "nav">
-								<li> <a href="/">Home</a> </li>
+						<div class="container">
+							<a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+								<span class="icon-bar"></span>
+								<span class="icon-bar"></span>
+								<span class="icon-bar"></span>
+							</a>
+							<a class="brand" href="/">Dendryte</a>
+							<div class="nav-collapse collapse">
+							<ul class="nav">
+								<li class="active"><a href="/"><i class="icon-home icon-white"></i>Home</a></li>
 							</ul>
-						</div>
-					</div> 
-				</div>
+							<a class="btn btn-primary pull-right" href="/project">Log in</a>
+							</div> <!--- End of Collapse ---->
+						</div> <!-- End of Container ---->
+					</div> <!-- End of Navbar-inner ---->
+				</div> <!-- End of Navbar ---->
 
 				<!-- Content -->
 				
