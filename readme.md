@@ -5,7 +5,11 @@ A dendrite is a tree-like structure in the human brain responsible for the trans
 
 Our project is a thinking tool in the same vein - a lightweight and portable web app which captures ideas in the form of mind maps.
 
+[www.orbital-dendryte.appspot.com](http://www.orbital-dendryte.appspot.com)
+
 ### Instructions
+
+	(Requires Google App Engine)
 
 	git clone
 	dev_appserver.py --clear_datastore=yes app.yaml
@@ -21,8 +25,8 @@ Our project is a thinking tool in the same vein - a lightweight and portable web
 
 ### Upcoming Features
 
-- Importing files
-- Exporting to various formats
-- Layout options
 - Node customization
-- Better UI and aesthetic
+- Responsive layout
+- Saving and loading locally
+- Exporting to various formats
+- More layout options
